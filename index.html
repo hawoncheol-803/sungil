@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css?v=20251104-1">
+    <title>공부 플래너</title>
+</head>
+<body>
+    <!-- Auth Block -->
+<div id="auth">
+  <!-- 로그인 상태 표시 -->
+  <div id="auth-status" style="display:none;">
+    <span id="current-user"></span>
+    <button id="logout-btn" type="button">로그아웃</button>
+  </div>
+
+  <!-- 로그인/회원가입 폼 -->
+  <div id="auth-forms">
+    <form id="signup-form" autocomplete="off">
+      <h3>회원가입</h3>
+      <label>
+        아이디
+        <input id="signup-username" required />
+      </label>
+      <label>
+        비밀번호
+        <input id="signup-password" type="password" required minlength="4" />
+      </label>
+      <button type="submit">회원가입</button>
+    </form>
+
+    <form id="login-form" autocomplete="off">
+      <h3>로그인</h3>
+      <label>
+        아이디
+        <input id="login-username" required />
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" type="password" required />
+      </label>
+      <button type="submit">로그인</button>
+    </form>
+  </div>
+
+  <p id="auth-message" aria-live="polite"></p>
+</div>
+    <div class="main">
+        <div class="head">
+            <div id="date"><!--날짜--></div>
+            <div id="goal"> <!--목표적기-->
+                <input id="goal-text" placeholder="한줄 목표">
+            </div>
+                <div id="time"> <!--순공시간-->
+            </div>
+        </div>
+        <div class="body"> <!--계획칸 과목, 세부 총 10개-->
+            <select id="sub1" style="font-weight: bold;"><!--과목 총 7개, 나중에 추가 가능-->
+              <option style="text-align: center;" value="" selected></option>
+              <option style="text-align: center; background-color: #ff4b4b;" value="korean">국어</option>
+              <option style="text-align: center; background-color: #ffa54b;" value="math">수학</option>
+              <option style="text-align: center; background-color: #fff54b;" value="english">영어</option>
+              <option style="text-align: center; background-color: #4bff4b;" value="society">사회</option>
+              <option style="text-align: center; background-color: #4b94ff;" value="science">과학</option>
+              <option style="text-align: center; background-color: #9b4bff;" value="history">한국사</option>
+              <option style="text-align: center; background-color: #9e9e9e;" value="left">기타</option>
+            </select>
+            <div id="detail1">
+              <textarea></textarea><!--세부계획-->
+              <img class="image" src="images/원.png" onclick="toggleImage(this)"><!--완료표시 이미지-->
+            </div>
+            <select id="sub2" style="font-weight: bold;">
+              <option style="text-align: center;" value="" selected></option>
+              <option style="text-align: center; background-color: #ff4b4b;" value="korean">국어</option>
+              <option style="text-align: center; background-color: #ffa54b;" value="math">수학</option>
+              <option style="text-align: center; background-color: #fff54b;" value="english">영어</option>
+              <option style="text-align: center; background-color: #4bff4b;" value="society">사회</option>
+              <option style="text-align: center; background-color: #4b94ff;" value="science">과학</option>
+              <option style="text-align: center; background-color: #9b4bff;" value="history">한국사</option>
+              <option style="text-align: center; background-color: #9e9e9e;" value="left">기타</option>
+            </select>
+            <div id="detail2">
+              <textarea></textarea>
+              <img class="image" src="images/원.png" onclick="toggleImage(this)">
+            </div>
+            <select id="sub3" style="font-weight: bold;">
+              <option style="text-align: center;" value="" selected></option>
+              <option style="text-align: center; background-color: #ff4b4b;" value="korean">국어</option>
+              <option style="text-align: center; background-color: #ffa54b;" value="math">수학</option>
+              <option style="text-align: center; background-color: #fff54b;" value="english">영어</option>
+              <option style="text-align: center; background-color: #4bff4b;" value="society">사회</option>
+              <option style="text-align: center; background-color: #4b94ff;" value="science">과학</option>
+              <option style="text-align: center; background-color: #9b4bff;" value="history">한국사</option>
+              <option style="text-align: center; background-color: #9e9e9e;" value="left">기타</option>
+            </select>
+            <div id="detail3">
+              <textarea></textarea>
+              <img class="image" src="images/원.png" onclick="toggleImage(this)">
+            </div>
+            <select id="sub4" style="font-weight: bold;">
+              <option style="text-align: center;" value="" selected></option>
+              <option style="text-align: center; background-color: #ff4b4b;" value="korean">국어</option>
+              <option style="text-align: center; background-color: #ffa54b;" value="math">수학</option>
+              <option style="text-align: center; background-color: #fff54b;" value="english">영어</option>
+              <option style="text-align: center; background-color: #4bff4b;" value="society">사회</option>
+              <option style="text-align: center; background-color: #4b94ff;" value="science">과학</option>
+              <option style="text-align: center; background-color: #9b4bff;" value="history">한국사</option>
+              <option style="text-align: center; background-color: #9e9e9e;" value="left">기타</option>
+            </select>
+            <div id="detail4">
+              <textarea></textarea>
+              <img class="image" src="images/원.png" onclick="toggleImage(this)">
+            </div>
+            <select id="sub5" style="font-weight: bold;">
+              <option style="text-align: center;" value="" selected></option>
+              <option style="text-align: center; background-color: #ff4b4b;" value="korean">국어</option>
+              <option style="text-align: center; background-color: #ffa54b;" value="math">수학</option>
+              <option style="text-align: center; background-color: #fff54b;" value="english">영어</option>
+              <option style="text-align: center; background-color: #4bff4b;" value="society">사회</option>
+              <option style="text-align: center; background-color: #4b94ff;" value="science">과학</option>
+              <option style="text-align: center; background-color: #9b4bff;" value="history">한국사</option>
+              <option style="text-align: center; background-color: #9e9e9e;" value="left">기타</option>
+            </select>
+            <div id="detail5">
+              <textarea></textarea>
+              <img class="image" src="images/원.png" onclick="toggleImage(this)">
+            </div>
+            <select id="sub6" style="font-weight: bold;">
+              <option style="text-align: center;" value="" selected></option>
+              <option style="text-align: center; background-color: #ff4b4b;" value="korean">국어</option>
+              <option style="text-align: center; background-color: #ffa54b;" value="math">수학</option>
+              <option style="text-align: center; background-color: #fff54b;" value="english">영어</option>
+              <option style="text-align: center; background-color: #4bff4b;" value="society">사회</option>
+              <option style="text-align: center; background-color: #4b94ff;" value="science">과학</option>
+              <option style="text-align: center; background-color: #9b4bff;" value="history">한국사</option>
+              <option style="text-align: center; background-color: #9e9e9e;" value="left">기타</option>
+            </select>
+            <div id="detail6">
+              <textarea></textarea>
+              <img class="image" src="images/원.png" onclick="toggleImage(this)">
+            </div>
+            <select id="sub7" style="font-weight: bold;">
+              <option style="text-align: center;" value="" selected></option>
+              <option style="text-align: center; background-color: #ff4b4b;" value="korean">국어</option>
+              <option style="text-align: center; background-color: #ffa54b;" value="math">수학</option>
+              <option style="text-align: center; background-color: #fff54b;" value="english">영어</option>
+              <option style="text-align: center; background-color: #4bff4b;" value="society">사회</option>
+              <option style="text-align: center; background-color: #4b94ff;" value="science">과학</option>
+              <option style="text-align: center; background-color: #9b4bff;" value="history">한국사</option>
+              <option style="text-align: center; background-color: #9e9e9e;" value="left">기타</option>
+            </select>
+            <div id="detail7">
+              <textarea></textarea>
+              <img class="image" src="images/원.png" onclick="toggleImage(this)">
+            </div>
+            <select id="sub8" style="font-weight: bold;">
+              <option style="text-align: center;" value="" selected></option>
+              <option style="text-align: center; background-color: #ff4b4b;" value="korean">국어</option>
+              <option style="text-align: center; background-color: #ffa54b;" value="math">수학</option>
+              <option style="text-align: center; background-color: #fff54b;" value="english">영어</option>
+              <option style="text-align: center; background-color: #4bff4b;" value="society">사회</option>
+              <option style="text-align: center; background-color: #4b94ff;" value="science">과학</option>
+              <option style="text-align: center; background-color: #9b4bff;" value="history">한국사</option>
+              <option style="text-align: center; background-color: #9e9e9e;" value="left">기타</option>
+            </select>
+            <div id="detail8">
+              <textarea></textarea>
+              <img class="image" src="images/원.png" onclick="toggleImage(this)">
+            </div>
+            <select id="sub9" style="font-weight: bold;">
+              <option style="text-align: center;" value="" selected></option>
+              <option style="text-align: center; background-color: #ff4b4b;" value="korean">국어</option>
+              <option style="text-align: center; background-color: #ffa54b;" value="math">수학</option>
+              <option style="text-align: center; background-color: #fff54b;" value="english">영어</option>
+              <option style="text-align: center; background-color: #4bff4b;" value="society">사회</option>
+              <option style="text-align: center; background-color: #4b94ff;" value="science">과학</option>
+              <option style="text-align: center; background-color: #9b4bff;" value="history">한국사</option>
+              <option style="text-align: center; background-color: #9e9e9e;" value="left">기타</option>
+            </select>
+            <div id="detail9">
+              <textarea></textarea>
+              <img class="image" src="images/원.png" onclick="toggleImage(this)">
+            </div>
+            <select id="sub10" style="font-weight: bold;">
+              <option style="text-align: center;" value="" selected></option>
+              <option style="text-align: center; background-color: #ff4b4b;" value="korean">국어</option>
+              <option style="text-align: center; background-color: #ffa54b;" value="math">수학</option>
+              <option style="text-align: center; background-color: #fff54b;" value="english">영어</option>
+              <option style="text-align: center; background-color: #4bff4b;" value="society">사회</option>
+              <option style="text-align: center; background-color: #4b94ff;" value="science">과학</option>
+              <option style="text-align: center; background-color: #9b4bff;" value="history">한국사</option>
+              <option style="text-align: center; background-color: #9e9e9e;" value="left">기타</option>
+            </select>
+            <div id="detail10">
+              <textarea></textarea>
+              <img class="image" src="images/원.png" onclick="toggleImage(this)">  
+            </div>
+        </div>
+        <div id="timetable"> <!--시간 표시-->
+        </div>
+        <div id="memo"> <!--메모-->
+            <textarea id="memo-text" placeholder="메모를 입력하세요..."></textarea>
+        </div>
+    </div>
+    <script src="index.js?v=4"></script>
+</body>
+</html>

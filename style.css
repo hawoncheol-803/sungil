@@ -1,0 +1,222 @@
+body {
+  display: flex;
+  flex-direction: column; /* 위에서 아래로 쌓기 */
+  align-items: center;    /* 가로 가운데 정렬 */
+  justify-content: flex-start; /* 위쪽에서 시작 */
+  min-height: 100vh;      /* 화면 높이 채우기 */
+  margin: 0;
+  background: #f7f7f7;
+}
+/* 🔹 회원가입/로그인 박스 */
+#auth {
+  width: 700px;
+  border: 1px solid #ddd;
+  padding: 4px;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  margin-top: 0px;
+  margin-bottom: 20px;/* 아래쪽 여백 (main과 간격) */
+}
+/* 🔹 main 그대로 가운데 배치 */
+.main {
+  width: 700px;
+  border: 5px solid #ccc;
+  background-color: #fff;
+  margin-bottom: 40px;
+  border-radius: 12px;
+}
+.head{
+    width: 700px;
+    height: 100px;
+    display: grid;
+
+    grid-template-rows: 50px 50px; /*행 50px 2개*/
+    grid-template-columns: 490px 210px; /*열 2개*/
+    grid-template-areas:
+    "date time"
+    "goal time";
+}
+#date{
+    grid-area: date;
+    border-bottom: 3px dotted #ccc;
+    border-right: 3px dotted #ccc;
+}
+#goal{
+    grid-area: goal;
+    border-bottom: 3px solid #ccc;
+    border-right: 3px dotted #ccc;
+}
+#time{
+    grid-area: time;
+    border-bottom: 3px solid #ccc;
+}
+.body{
+    width: 700px;
+    height: 500px;
+    border-bottom: 3px solid #ccc;
+    display: grid;
+
+    grid-template-columns: 200px 500px;
+    grid-template-rows: repeat(10, 50px);
+    grid-template-areas: 
+    "s1 d1"
+    "s2 d2"
+    "s3 d3"
+    "s4 d4"
+    "s5 d5"
+    "s6 d6"
+    "s7 d7"
+    "s8 d8"
+    "s9 d9"
+    "s10 d10"; /*과목, 세부*/
+}
+#sub1{
+    grid-area: s1;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail1{
+    grid-area: d1;
+    border-bottom: 2px dotted #ccc;
+}
+#sub2{
+    grid-area: s2;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail2{
+    grid-area: d2;
+    border-bottom: 2px dotted #ccc;
+}
+#sub3{
+    grid-area: s3;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail3{
+    grid-area: d3;
+    border-bottom: 2px dotted #ccc;
+}
+#sub4{
+    grid-area: s4;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail4{
+    grid-area: d4;
+    border-bottom: 2px dotted #ccc;
+}
+#sub5{
+    grid-area: s5;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail5{
+    grid-area: d5;
+    border-bottom: 2px dotted #ccc;
+}
+#sub6{
+    grid-area: s6;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail6{
+    grid-area: d6;
+    border-bottom: 2px dotted #ccc;
+}
+#sub7{
+    grid-area: s7;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail7{
+    grid-area: d7;
+    border-bottom: 2px dotted #ccc;
+}
+#sub8{
+    grid-area: s8;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail8{
+    grid-area: d8;
+    border-bottom: 2px dotted #ccc;
+}
+#sub9{
+    grid-area: s9;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail9{
+    grid-area: d9;
+    border-bottom: 2px dotted #ccc;
+}
+#sub10{
+    grid-area: s10;
+    border-right: 2px dotted #ccc;
+}
+#detail10{
+    grid-area: d10;
+}
+#timetable{
+    width: 700px;
+    height: 170px;
+    border-bottom: 3px solid #ccc;
+    display: grid;
+
+    grid-template-rows: repeat(6, 1fr);
+    grid-template-columns: repeat(28, 1fr);
+    grid-template-areas:
+    "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28"
+    "29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56"
+    "57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84"
+    "85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112"
+    "113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 132 133 134 135 136 137 138 139 140"
+    "141 142 143 144 145 146 147 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168";
+}
+#timetable div{
+    text-align: center;
+    border: 1px dotted #ccc;
+}
+#memo{
+    width: 700px;
+    height: 130px;
+}
+#goal-text{
+    width: 487px;
+    height: 47px;
+    border: 0px;
+    padding: 0px;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    white-space: nowrap;
+}
+#memo-text{
+    width: 698px;
+    height: 122px;
+    border: 0px;
+    padding: 8px;
+    font-size: 16px;
+    resize: none;              /* 크기 조절 금지 */
+    line-height: 1.5;
+    white-space: pre-wrap;     /* 줄바꿈과 공백 유지 */
+    word-break: break-word;    /* 긴 단어 자동 줄바꿈 */
+    box-sizing: border-box;
+    overflow-wrap: break-word; /* 텍스트 넘침 방지 */
+}
+.image{
+    height: 30px; width: 30px; float: right; margin-right: 15px; margin-top: 10px; margin-bottom: 10px;
+}
+select{
+    border: 0px;
+}
+.body textarea{
+    border: 0px;
+    padding: 0px;
+    width: 455px;
+    height: 48px;
+    resize: none;
+    font-size: large;
+}
