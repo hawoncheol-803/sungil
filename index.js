@@ -177,17 +177,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         closeCalendar();
 
-        if (window.__plannerLoad) {
-          try {
-            await window.__plannerLoad();
-          } catch (err) {
-            console.error("로드 오류:", err);
-          }
-        }
-      });
+        // 화면이 완전히 갱신된 뒤에 로드해야 값이 사라지지 않음
+      setTimeout(() => {
+        window.__plannerLoad && window.__plannerLoad();
+      }, 10);
+
 
       grid.appendChild(btn);
     }
+  )
 
     wrap.appendChild(grid);
 
