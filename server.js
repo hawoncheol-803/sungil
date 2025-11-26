@@ -1,152 +1,122 @@
-// --- imports ---
+require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
 const bcrypt = require("bcrypt");
 const { createClient } = require("@supabase/supabase-js");
 
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // --- Supabase 연결 ---
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY   // 서비스 키 사용
+  process.env.SUPABASE_KEY
 );
 
-// --- App 설정 ---
-const app = express();
-app.use(express.json());
-
+// --- 세션 ---
 app.use(
   session({
-    secret: "your-secret-key",
+    secret: "planner-secret",
     resave: false,
     saveUninitialized: false,
+    cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
   })
 );
 
-// 정적 파일
-app.use(express.static("."));
+// --- 정적 파일 제공 ---
+app.use(express.static("public"));
 
-// --- 미들웨어 ---
-function requireLogin(req, res, next) {
-  if (!req.session.userId) {
-    return res.status(401).json({ message: "로그인이 필요합니다." });
-  }
-  next();
-}
-
-// ===================================================
-//                 회원가입
-// ===================================================
+// --- 회원가입 ---
 app.post("/api/signup", async (req, res) => {
   const { username, password } = req.body;
-
   const hash = await bcrypt.hash(password, 10);
 
-  // username 중복 확인
-  const { data: exists } = await supabase
+  const { data, error } = await supabase
     .from("users")
-    .select("*")
-    .eq("username", username)
-    .single();
+    .insert([{ username, password: hash }]);
 
-  if (exists) {
-    return res.status(409).json({ message: "이미 존재하는 아이디입니다." });
-  }
-
-  const { error } = await supabase.from("users").insert({
-    username,
-    password_hash: hash,
-  });
-
-  if (error) return res.status(500).json({ message: "회원가입 실패" });
-
-  res.status(201).json({ message: "회원가입 성공" });
+  if (error) return res.status(400).json({ message: "회원가입 실패" });
+  res.json({ message: "OK" });
 });
 
-// ===================================================
-//                 로그인
-// ===================================================
+// --- 로그인 ---
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
 
-  // 사용자 찾기
-  const { data: user } = await supabase
+  const { data: user, error } = await supabase
     .from("users")
     .select("*")
     .eq("username", username)
-    .single();
+    .maybeSingle();
 
-  if (!user) {
-    return res.status(400).json({ message: "아이디가 존재하지 않습니다." });
-  }
+  if (!user) return res.status(400).json({ message: "아이디 없음" });
 
-  const ok = await bcrypt.compare(password, user.password_hash);
-  if (!ok) {
-    return res.status(400).json({ message: "비밀번호가 일치하지 않습니다." });
-  }
+  const ok = await bcrypt.compare(password, user.password);
+  if (!ok) return res.status(400).json({ message: "비밀번호 오류" });
 
-  // 세션 저장
-  req.session.userId = user.id;
-  req.session.username = user.username;
-
-  res.json({ message: "로그인 성공", username: user.username });
+  req.session.user = username;
+  res.json({ username });
 });
 
-// ===================================================
-//                 로그아웃
-// ===================================================
+// --- 로그아웃 ---
 app.post("/api/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.json({ message: "로그아웃 완료" });
-  });
+  req.session.destroy(() => {});
+  res.json({ ok: true });
 });
 
-// ===================================================
-//                 현재 유저 정보
-// ===================================================
+// --- 로그인된 유저 정보 확인 ---
 app.get("/api/me", (req, res) => {
-  if (!req.session.userId) return res.status(204).end();
-  res.json({ username: req.session.username });
+  if (!req.session.user) return res.json(null);
+  res.json({ username: req.session.user });
 });
 
-// ===================================================
-//                 플래너 저장
-// ===================================================
-app.post("/api/planner/save", requireLogin, async (req, res) => {
+// --- 저장 API ---
+app.post("/api/planner/save", async (req, res) => {
+  const username = req.session.user;
+  if (!username) return res.status(401).json({ message: "로그인 필요" });
+
   const { date, data } = req.body;
-  const userId = req.session.userId;
 
-  // upsert 활용
-  const { error } = await supabase.from("planners").upsert({
-    user_id: userId,
-    date,
-    data: JSON.stringify(data),
-  });
-
-  if (error) return res.status(500).json({ message: "저장 실패" });
-
-  res.json({ message: "저장 성공" });
-});
-
-// ===================================================
-//                 플래너 불러오기
-// ===================================================
-app.get("/api/planner", requireLogin, async (req, res) => {
-  const date = req.query.date;
-  const userId = req.session.userId;
-
-  const { data: row } = await supabase
+  // supabase UPSERT
+  const { error } = await supabase
     .from("planners")
-    .select("data")
-    .eq("user_id", userId)
-    .eq("date", date)
-    .single();
+    .upsert(
+      {
+        user_id: username,
+        date,
+        data,
+      },
+      { onConflict: "user_id,date" }
+    );
 
-  if (!row) return res.json(null);
+  if (error) {
+    console.error(error);
+    return res.status(500).json({ message: "저장 실패" });
+  }
 
-  res.json(JSON.parse(row.data));
+  res.json({ ok: true });
 });
 
-// ===================================================
+// --- 불러오기 API ---
+app.get("/api/planner", async (req, res) => {
+  const username = req.session.user;
+  const { date } = req.query;
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server running"));
+  if (!username) return res.json(null);
+
+  const { data, error } = await supabase
+    .from("planners")
+    .select("*")
+    .eq("user_id", username)
+    .eq("date", date)
+    .maybeSingle();
+
+  if (error) return res.json(null);
+  if (!data) return res.json(null);
+
+  res.json(data.data);
+});
+
+// --- 서버 시작 ---
+app.listen(3000, () => console.log("Server running on 3000"));
