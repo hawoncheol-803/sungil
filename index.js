@@ -177,15 +177,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         closeCalendar();
 
-        // 화면이 완전히 갱신된 뒤에 로드해야 값이 사라지지 않음
-      setTimeout(() => {
-        window.__plannerLoad && window.__plannerLoad();
-      }, 10);
-
+        if (window.__plannerLoad) {
+          try {
+            await window.__plannerLoad();
+          } catch (err) {
+            console.error("로드 오류:", err);
+          }
+        }
+      });
 
       grid.appendChild(btn);
     }
-  )
 
     wrap.appendChild(grid);
 
@@ -597,20 +599,8 @@ function toggleImage(img) {
     if (e.target.matches(".body select")) save();
   });
   document.addEventListener("click", (e) => {
-  // 날짜 클릭 시 저장 금지 (초기화 방지 핵심)
-  if (e.target.closest("#date")) return;
-
-  // 체크 이미지 클릭 시 저장
-  if (e.target.classList.contains("image")) {
-    save();
-    return;
-  }
-
-  // 타임테이블 클릭 시 저장
-  if (e.target.closest("#timetable")) {
-    save();
-  }
-});
+    if (e.target.closest("#timetable")) save();
+  });
 
   // 날짜 클릭 시 자동 로드 실행
   const dateBox = document.getElementById("date");
