@@ -4,6 +4,12 @@ const session = require("express-session");
 const bcrypt = require("bcrypt");
 const { createClient } = require("@supabase/supabase-js");
 
+console.log("SUPABASE_URL 존재?", !!process.env.SUPABASE_URL);
+console.log(
+  "SUPABASE_KEY 길이:",
+  process.env.SUPABASE_KEY ? process.env.SUPABASE_KEY.length : "undefined"
+);
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

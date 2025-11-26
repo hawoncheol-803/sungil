@@ -58,9 +58,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // -----------------------
   const savedDateStr = localStorage.getItem(STORAGE_KEY);
   let selectedDate = savedDateStr ? new Date(savedDateStr) : null;
+
   if (selectedDate) {
+    // 저장된 날짜 있으면 그걸 사용
     textH1.textContent = `${selectedDate.getFullYear()}년 ${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`;
+  } else {
+    // ❗처음 들어온 경우: 오늘 날짜로 초기화
+    selectedDate = new Date();
+    textH1.textContent = fmtKR(selectedDate);
+    localStorage.setItem(STORAGE_KEY, selectedDate.toISOString());
   }
+
 
   let calendarEl = null;
 
