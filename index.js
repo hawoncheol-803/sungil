@@ -599,12 +599,17 @@ function toggleImage(img) {
     if (e.target.matches(".body select")) save();
   });
   document.addEventListener("click", (e) => {
-    // 🔥 날짜 영역 클릭 시 save 금지 (핵심)
-    if (e.target.closest("#date")) return;
-    if (e.target.closest(".calendar")) return;
 
+    // 🔥 날짜 박스를 클릭하면 저장 금지 (중요 핵심)
+    if (e.target.closest("#date")) return;
+
+    // 🔥 캘린더 전체(숫자 버튼 포함)를 클릭하면 저장 금지
+    if (e.target.closest(".calendar") || e.target.closest(".calendar button")) return;
+
+    // 나머지 경우만 저장
     if (e.target.closest("#timetable")) save();
   });
+
 
 
   // 날짜 클릭 시 자동 로드 실행
