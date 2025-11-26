@@ -1,16 +1,17 @@
-// ========================= 공통 API =========================
+// === 공통 API 함수 (index.js 맨 위에 추가) ======================
 async function apiPost(path, body) {
   const res = await fetch(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify(body),
+    credentials: "include", // 쿠키 세션용
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || "서버 오류 발생");
+  if (!res.ok) {
+    throw new Error(data.message || "서버 요청 중 오류가 발생했습니다.");
+  }
   return data;
 }
-
 async function apiGet(path) {
   const res = await fetch(path, {
     method: "GET",
@@ -18,164 +19,114 @@ async function apiGet(path) {
   });
   if (res.status === 204) return null;
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || "서버 오류 발생");
+  if (!res.ok) {
+    throw new Error(data.message || "서버 요청 중 오류가 발생했습니다.");
+  }
   return data;
 }
 
-// ========================= 로그인 처리 =========================
 document.addEventListener("DOMContentLoaded", () => {
-  const $ = (s) => document.querySelector(s);
-  const LS_USER = "authCurrentUser";
+  const dateDiv = document.getElementById("date");
+  if (!dateDiv) return;
 
-  const setUser = (u) =>
-    u ? localStorage.setItem(LS_USER, u) : localStorage.removeItem(LS_USER);
-
-  const getUser = () => localStorage.getItem(LS_USER);
-
-  const signupForm = $("#signup-form");
-  const loginForm = $("#login-form");
-  const logoutBtn = $("#logout-btn");
-  const authForms = $("#auth-forms");
-  const authStatus = $("#auth-status");
-  const userSpan = $("#current-user");
-  const msg = $("#auth-message");
-
-  function render() {
-    const user = getUser();
-    if (user) {
-      authForms.style.display = "none";
-      authStatus.style.display = "flex";
-      userSpan.textContent = `현재계정: '${user}'`;
-      msg.textContent = "로그인됨";
-      msg.style.color = "#2a7";
-    } else {
-      authForms.style.display = "grid";
-      authStatus.style.display = "none";
-      userSpan.textContent = "";
-      msg.textContent = "";
-    }
-  }
-
-  // 회원가입
-  signupForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const id = $("#signup-username").value.trim();
-    const pw = $("#signup-password").value;
-    if (!id || !pw) return;
-    try {
-      await apiPost("/api/signup", { username: id, password: pw });
-      msg.textContent = "회원가입 성공, 로그인하세요.";
-      msg.style.color = "#2a7";
-    } catch (e) {
-      msg.textContent = e.message;
-      msg.style.color = "#d33";
-    }
-  });
-
-  // 로그인
-  loginForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const id = $("#login-username").value.trim();
-    const pw = $("#login-password").value;
-    try {
-      const data = await apiPost("/api/login", { username: id, password: pw });
-      setUser(data.username || id);
-      render();
-      window.__plannerLoad && window.__plannerLoad();
-    } catch (e) {
-      msg.textContent = e.message;
-      msg.style.color = "#d33";
-    }
-  });
-
-  // 로그아웃
-  logoutBtn?.addEventListener("click", async () => {
-    try {
-      await apiPost("/api/logout", {});
-    } catch {}
-    setUser(null);
-    render();
-  });
-
-  // 세션 확인
-  (async () => {
-    try {
-      const me = await apiGet("/api/me");
-      if (me?.username) setUser(me.username);
-    } catch {}
-    render();
-  })();
-});
-
-// ========================= 날짜 UI + 캘린더 =========================
-document.addEventListener("DOMContentLoaded", () => {
+  // 저장 키 이름
   const STORAGE_KEY = "selectedDate";
-  const dateBox = document.getElementById("date");
 
-  if (!dateBox) return;
+  // #date 스타일
+  Object.assign(dateDiv.style, {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    userSelect: "none",
+  });
 
-  const label = document.createElement("h1");
-  label.style.margin = "0";
-  label.style.fontSize = "20px";
-  dateBox.appendChild(label);
+  const textH1 = document.createElement("h1");
+  Object.assign(textH1.style, {
+    margin: "0",
+    fontSize: "20px",
+    lineHeight: "1",
+    pointerEvents: "none",
+    position: "relative",
+    zIndex: "1",
+  });
+  dateDiv.appendChild(textH1);
 
-  let selected = null;
-
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) selected = new Date(saved);
-  else {
-    selected = new Date();
-    localStorage.setItem(STORAGE_KEY, selected.toISOString());
+  // -----------------------
+  // 🔹 localStorage에서 날짜 복원
+  // -----------------------
+  const savedDateStr = localStorage.getItem(STORAGE_KEY);
+  let selectedDate = savedDateStr ? new Date(savedDateStr) : null;
+  if (selectedDate) {
+    textH1.textContent = `${selectedDate.getFullYear()}년 ${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`;
   }
 
-  const fmt = (d) =>
+  let calendarEl = null;
+
+  const fmtKR = (d) =>
     `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
 
-  label.textContent = fmt(selected);
+  const openCalendar = (seed) => {
+    if (calendarEl) return;
+    const base = seed instanceof Date ? new Date(seed) : new Date();
+    calendarEl = buildCalendar(base);
+    dateDiv.appendChild(calendarEl);
 
-  let popup = null;
-
-  const openCalendar = () => {
-    if (popup) return;
-    popup = buildCalendar(new Date(selected));
-    dateBox.appendChild(popup);
-
+    // 바깥 클릭 시 닫기
     setTimeout(() => {
-      const close = (e) => {
-        if (!dateBox.contains(e.target)) {
-          popup.remove();
-          popup = null;
-        }
+      const onDocClick = (e) => {
+        if (!dateDiv.contains(e.target)) closeCalendar();
       };
-      document.addEventListener("click", close, { once: true });
+      document.addEventListener("click", onDocClick, { once: true });
     });
   };
 
-  dateBox.addEventListener("click", openCalendar);
+  const closeCalendar = () => {
+    if (!calendarEl) return;
+    calendarEl.remove();
+    calendarEl = null;
+  };
 
-  // ========================= 캘린더 생성 =========================
-  function buildCalendar(base) {
-    let y = base.getFullYear();
-    let m = base.getMonth();
+  const buildCalendar = (seedDate) => {
+    let y = seedDate.getFullYear();
+    let m = seedDate.getMonth();
 
     const wrap = document.createElement("div");
-    wrap.style.position = "absolute";
-    wrap.style.top = "100%";
-    wrap.style.left = "0";
-    wrap.style.background = "#fff";
-    wrap.style.border = "1px solid #ccc";
-    wrap.style.padding = "8px";
-    wrap.style.zIndex = "9999";
-    wrap.style.width = "260px";
+    Object.assign(wrap.style, {
+      position: "absolute",
+      top: "100%",
+      left: "0",
+      zIndex: "9999",
+      background: "#fff",
+      border: "1px solid #ccc",
+      borderRadius: "8px",
+      boxShadow: "0 8px 24px rgba(0,0,0,.12)",
+      padding: "8px",
+      marginTop: "6px",
+      width: "260px",
+    });
 
     const header = document.createElement("div");
-    header.style.display = "flex";
-    header.style.justifyContent = "space-between";
+    Object.assign(header.style, {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: "6px",
+      fontWeight: "600",
+    });
 
-    const mkBtn = (t) => {
+    const mkBtn = (label) => {
       const b = document.createElement("button");
-      b.textContent = t;
-      b.style.cursor = "pointer";
+      b.type = "button";
+      b.textContent = label;
+      Object.assign(b.style, {
+        border: "none",
+        background: "#f1f1f1",
+        borderRadius: "6px",
+        padding: "4px 8px",
+        cursor: "pointer",
+      });
       return b;
     };
 
@@ -185,346 +136,492 @@ document.addEventListener("DOMContentLoaded", () => {
     const prev = mkBtn("‹");
     const next = mkBtn("›");
 
-    prev.addEventListener("click", () => {
-      m--;
-      if (m < 0) {
-        m = 11;
-        y--;
-      }
-      wrap.remove();
-      popup = buildCalendar(new Date(y, m, 1));
-      dateBox.appendChild(popup);
-    });
-
-    next.addEventListener("click", () => {
-      m++;
-      if (m > 11) {
-        m = 0;
-        y++;
-      }
-      wrap.remove();
-      popup = buildCalendar(new Date(y, m, 1));
-      dateBox.appendChild(popup);
-    });
-
     header.append(prev, title, next);
     wrap.appendChild(header);
 
     const grid = document.createElement("div");
-    grid.style.display = "grid";
-    grid.style.gridTemplateColumns = "repeat(7, 1fr)";
-    grid.style.gap = "3px";
-
-    ["일", "월", "화", "수", "목", "금", "토"].forEach((w) => {
-      const d = document.createElement("div");
-      d.textContent = w;
-      d.style.textAlign = "center";
-      d.style.fontWeight = "700";
-      grid.appendChild(d);
+    Object.assign(grid.style, {
+      display: "grid",
+      gridTemplateColumns: "repeat(7, 1fr)",
+      gap: "4px",
     });
 
-    const first = new Date(y, m, 1).getDay();
-    const last = new Date(y, m + 1, 0).getDate();
+    ["일","월","화","수","목","금","토"].forEach((wd, i) => {
+      const c = document.createElement("div");
+      c.textContent = wd;
+      Object.assign(c.style, {
+        textAlign: "center",
+        fontSize: "12px",
+        fontWeight: "700",
+        color: i === 0 ? "#d00" : i === 6 ? "#06c" : "#333",
+      });
+      grid.appendChild(c);
+    });
 
-    for (let i = 0; i < first; i++) grid.appendChild(document.createElement("div"));
+    const firstDay = new Date(y, m, 1).getDay();
+    const lastDate = new Date(y, m + 1, 0).getDate();
 
-    for (let d = 1; d <= last; d++) {
+    for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement("div"));
+
+    for (let d = 1; d <= lastDate; d++) {
       const btn = document.createElement("button");
-      btn.textContent = d;
-      btn.style.cursor = "pointer";
+      btn.type = "button";
+      btn.textContent = String(d);
+      Object.assign(btn.style, {
+        border: "none",
+        background: "#f7f7f7",
+        borderRadius: "6px",
+        padding: "6px 0",
+        cursor: "pointer",
+      });
 
-      btn.addEventListener("click", async () => {
-        // 🔥 날짜 바꾸기 전 — 현재 화면 저장
-        if (window.__plannerSave) await window.__plannerSave();
-
-        selected = new Date(y, m, d);
-        localStorage.setItem(STORAGE_KEY, selected.toISOString());
-        label.textContent = fmt(selected);
-
-        popup.remove();
-        popup = null;
-
-        // 🔥 새 날짜 데이터 로드
-        if (window.__plannerLoad) await window.__plannerLoad();
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        selectedDate = new Date(y, m, d);
+        textH1.textContent = fmtKR(selectedDate);
+        // 🔹 날짜를 localStorage에 저장
+        localStorage.setItem(STORAGE_KEY, selectedDate.toISOString());
+        closeCalendar();
       });
 
       grid.appendChild(btn);
     }
 
     wrap.appendChild(grid);
+
+    prev.addEventListener("click", (e) => {
+      e.stopPropagation();
+      m -= 1;
+      if (m < 0) { m = 11; y -= 1; }
+      wrap.remove();
+      calendarEl = buildCalendar(new Date(y, m, 1));
+      dateDiv.appendChild(calendarEl);
+    });
+
+    next.addEventListener("click", (e) => {
+      e.stopPropagation();
+      m += 1;
+      if (m > 11) { m = 0; y += 1; }
+      wrap.remove();
+      calendarEl = buildCalendar(new Date(y, m, 1));
+      dateDiv.appendChild(calendarEl);
+    });
+
+    wrap.addEventListener("click", (e) => e.stopPropagation());
+
     return wrap;
-  }
-});
-// ========================= 타임테이블 div 생성 =========================
-document.addEventListener("DOMContentLoaded", () => {
-  const table = document.getElementById("timetable");
-  if (!table) return;
-
-  for (let i = 1; i <= 168; i++) {
-    const div = document.createElement("div");
-    div.id = i;
-    table.appendChild(div);
-  }
-
-  // 시간 표시 숫자
-  const nums = {
-    1: 6, 8: 12, 15: 6, 22: 12,
-    29: 7, 36: 1, 43: 7, 50: 1,
-    57: 8, 64: 2, 71: 8, 78: 2,
-    85: 9, 92: 3, 99: 9, 106: 3,
-    113: 10, 120: 4, 127: 10, 134: 4,
-    141: 11, 148: 5, 155: 11, 162: 5
   };
-  Object.entries(nums).forEach(([id, val]) => {
-    document.getElementById(id).textContent = val;
-  });
-});
 
-// ========================= 한 줄 목표 글자수 제한 =========================
+  dateDiv.addEventListener("click", () => {
+    if (!calendarEl) openCalendar(selectedDate || new Date());
+  });
+});//날짜
+document.addEventListener("DOMContentLoaded", ()=>{
+  for (let i = 1; i <= 168; i++) {
+      let div = document.createElement("div");
+      div.id = i;
+      document.getElementById("timetable").appendChild(div)//타임테이블 div 생성
+  }
+  document.getElementById("1").textContent = 6;
+  document.getElementById("8").textContent = 12;
+  document.getElementById("15").textContent = 6;
+  document.getElementById("22").textContent = 12;//1줄
+  document.getElementById("29").textContent = 7;
+  document.getElementById("36").textContent = 1;
+  document.getElementById("43").textContent = 7;
+  document.getElementById("50").textContent = 1;//2줄
+  document.getElementById("57").textContent = 8;
+  document.getElementById("64").textContent = 2;
+  document.getElementById("71").textContent = 8;
+  document.getElementById("78").textContent = 2;//3줄
+  document.getElementById("85").textContent = 9;
+  document.getElementById("92").textContent = 3;
+  document.getElementById("99").textContent = 9;
+  document.getElementById("106").textContent = 3;//4줄
+  document.getElementById("113").textContent = 10;
+  document.getElementById("120").textContent = 4;
+  document.getElementById("127").textContent = 10;
+  document.getElementById("134").textContent = 4;//5줄
+  document.getElementById("141").textContent = 11;
+  document.getElementById("148").textContent = 5;
+  document.getElementById("155").textContent = 11;
+  document.getElementById("162").textContent = 5;//6줄
+});//타임테이블 div생성&시간
 document.addEventListener("DOMContentLoaded", () => {
-  const input = document.getElementById("goal-text");
-  if (!input) return;
+  const goalInput = document.getElementById("goal-text");
 
   const ctx = document.createElement("canvas").getContext("2d");
 
   const updateFont = () => {
-    const s = getComputedStyle(input);
-    ctx.font = `${s.fontWeight} ${s.fontSize} ${s.fontFamily}`;
+    const style = getComputedStyle(goalInput);
+    ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
   };
   updateFont();
 
-  input.addEventListener("input", () => {
+  const getMaxWidth = () => goalInput.clientWidth - 10;
+
+  goalInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") e.preventDefault(); // 엔터 금지
+  });
+
+  goalInput.addEventListener("input", () => {
     updateFont();
-    const maxWidth = input.clientWidth - 10;
-    const text = input.value;
+
+    const text = goalInput.value;
     const width = ctx.measureText(text).width;
 
-    if (width > maxWidth) input.value = text.slice(0, -1);
+    // 현재 텍스트 폭이 input 칸보다 크면 마지막 입력을 제거
+    if (width > getMaxWidth()) {
+      goalInput.value = text.slice(0, -1);
+    }
   });
+  window.addEventListener("resize", updateFont);
+});//한줄목표 칸 초과x
+document.addEventListener("DOMContentLoaded", () => {
+  const timetable = document.getElementById("timetable");
+  if (!timetable) return;
+  const colors = ["#ff4b4b", "#ffa54b", "#fff54b", "#4bff4b", "#4b94ff", "#9b4bff", "#9e9e9e"];
+
+  // --- [추가] 시간 표시 영역/텍스트 준비(한 번만 생성해서 재사용) ---
+const time = document.getElementById("time");
+if (!time) throw new Error("#time 요소가 필요합니다.");
+
+Object.assign(time.style, {
+  position: "relative",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  userSelect: "none",
 });
 
-// ========================= 타임테이블 색칠 + 순공시간 =========================
-document.addEventListener("DOMContentLoaded", () => {
-  const table = document.getElementById("timetable");
-  if (!table) return;
+let timetext = document.getElementById("timetext");
+if (!timetext) {
+  timetext = document.createElement("h1");
+  timetext.id = "timetext";
+  Object.assign(timetext.style, {
+    margin: "0",
+    fontSize: "20px",
+    lineHeight: "1",
+    pointerEvents: "none",
+    position: "relative",
+    zIndex: "1",
+  });
+  time.appendChild(timetext);
+}
 
-  const colors = ["#ff4b4b", "#ffa54b", "#fff54b", "#4bff4b", "#4b94ff", "#9b4bff", "#9e9e9e"];
-  const timeBox = document.getElementById("time");
+// --- [추가] 현재 색칠된 칸 수 기준으로 총 시간(h, m) 갱신 ---
+function updateTime() {
+  const paintedCount = [...timetable.querySelectorAll("#timetable > div")]
+    .filter((d) => d.dataset.cidx !== undefined) // 색이 적용된 칸만 집계
+    .length;
 
-  const timeText = document.createElement("h1");
-  timeText.id = "timetext";
-  timeText.style.margin = "0";
-  timeText.style.fontSize = "20px";
-  timeBox.appendChild(timeText);
+  const totalMinutes = paintedCount * 10; // 칸 1개 = 10분
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
 
-  function updateTime() {
-    const painted = [...table.children].filter((c) => c.dataset.cidx !== undefined).length;
-    const m = painted * 10;
-    const h = Math.floor(m / 60);
-    timeText.textContent = `${h}시간 ${m % 60}분`;
-  }
+  timetext.textContent = `${h}시간 ${m}분`;
+}
 
-  table.addEventListener("click", (e) => {
+  // 이벤트 위임: timetable 내부 칸 클릭 처리
+  timetable.addEventListener("click", (e) => {
     const cell = e.target.closest("#timetable > div");
     if (!cell) return;
+
+    // 숫자 들어있는 칸은 제외
     if (cell.textContent.trim() !== "") return;
 
-    let idx = cell.dataset.cidx ? Number(cell.dataset.cidx) : -1;
+    // 현재 색 인덱스 (없으면 -1)
+    let idx = cell.dataset.cidx !== undefined ? Number(cell.dataset.cidx) : -1;
+
+    // 다음 상태로 이동 (마지막 다음은 '원래색'으로 리셋)
     idx = (idx + 1) % (colors.length + 1);
 
     if (idx === colors.length) {
-      delete cell.dataset.cidx;
+      // 리셋
       cell.style.backgroundColor = "";
+      delete cell.dataset.cidx;
     } else {
-      cell.dataset.cidx = idx;
+      // 색 적용 + 상태 저장
       cell.style.backgroundColor = colors[idx];
+      cell.dataset.cidx = String(idx);
     }
-
     updateTime();
-    if (window.__plannerSave) window.__plannerSave();
   });
-
   updateTime();
-});
+});//타임테이블 색깔&순공 시간 표시
+// === 회원가입 / 로그인 / 로그아웃 (서버 버전) ===================
+document.addEventListener("DOMContentLoaded", () => {
+  const $ = (sel) => document.querySelector(sel);
 
-// ========================= 체크 이미지 =========================
-function toggleImage(img) {
-  const checked = img.src.endsWith("체크표시_원.png");
-  img.src = checked ? "images/원.png" : "images/체크표시_원.png";
+  const signupForm = $("#signup-form");
+  const loginForm  = $("#login-form");
+  const logoutBtn  = $("#logout-btn");
+  const authForms  = $("#auth-forms");
+  const authStatus = $("#auth-status");
+  const authMsg    = $("#auth-message");
+  const currentUserSpan = $("#current-user");
 
-  if (window.__plannerSave) window.__plannerSave();
-}
-// ========================= 데이터 수집 =========================
-function planner_collect() {
-  const $ = (s) => document.querySelector(s);
+  // 브라우저에 현재 유저 이름만 저장(화면용)
+  const LS_CURRENT = "authCurrentUser";
 
-  const data = {
-    goal: $("#goal-text")?.value || "",
-    memo: $("#memo-text")?.value || "",
-    subjects: [],
-    details: [],
-    timetable: {},
+  const getCurrentUser = () => localStorage.getItem(LS_CURRENT) || null;
+  const setCurrentUser = (username) => {
+    if (username) localStorage.setItem(LS_CURRENT, username);
+    else localStorage.removeItem(LS_CURRENT);
   };
 
-  // 과목 + 세부 + 체크
-  for (let i = 1; i <= 10; i++) {
-    const sel = $("#sub" + i);
-    const ta = document.querySelector(`#detail${i} textarea`);
-    const img = document.querySelector(`#detail${i} img.image`);
-
-    data.subjects.push(sel ? sel.value : "");
-    data.details.push({
-      text: ta ? ta.value : "",
-      checked: img ? img.src.endsWith("체크표시_원.png") : false,
-    });
-  }
-
-  // 타임테이블
-  const table = document.getElementById("timetable");
-  if (table) {
-    [...table.children].forEach((c) => {
-      if (c.textContent.trim() !== "" || c.dataset.cidx === undefined) return;
-      data.timetable[c.id] = Number(c.dataset.cidx);
-    });
-  }
-
-  return data;
-}
-
-// ========================= 로컬 저장 key 생성 =========================
-function planner_getLocalKey() {
-  const user = localStorage.getItem("authCurrentUser") || "guest";
-  const dateISO = localStorage.getItem("selectedDate");
-  if (!dateISO) return null;
-  const date = dateISO.slice(0, 10);
-  return `planner_${user}_${date}`;
-}
-// ========================= 저장 =========================
-async function planner_save() {
-  const key = planner_getLocalKey();
-  const data = planner_collect();
-
-  // ---- 1) 로컬 저장 (항상 성공) ----
-  if (key) {
-    try {
-      localStorage.setItem(key, JSON.stringify(data));
-    } catch (e) {
-      console.error("로컬 저장 실패:", e);
+  function renderAuthUI() {
+    const user = getCurrentUser();
+    if (user) {
+      authForms.style.display = "none";
+      authStatus.style.display = "flex";
+      currentUserSpan.textContent = `현재계정: '${user}'`;
+      authMsg.textContent = "로그인 성공";
+      authMsg.style.color = "#2a7";
+    } else {
+      authForms.style.display = "grid";
+      authStatus.style.display = "none";
+      currentUserSpan.textContent = "";
+      authMsg.textContent = "";
     }
   }
 
-  // ---- 2) 서버 저장 (되면 좋고, 실패해도 화면 데이터는 유지됨) ----
-  const user = localStorage.getItem("authCurrentUser");
-  const dateISO = localStorage.getItem("selectedDate");
-  if (!user || !dateISO) return; // 로그인 안 되어 있으면 서버 저장 X
+  // 회원가입
+  signupForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = $("#signup-username").value.trim();
+    const password = $("#signup-password").value;
 
-  try {
-    await apiPost("/api/planner/save", {
-      date: dateISO.slice(0, 10),
-      data,
-    });
-  } catch (e) {
-    console.error("서버 저장 실패(화면 데이터 유지됨):", e);
-  }
-}
-
-// ========================= 불러오기 =========================
-async function planner_load() {
-  const key = planner_getLocalKey();
-  const dateISO = localStorage.getItem("selectedDate");
-  const user = localStorage.getItem("authCurrentUser");
-
-  let data = null;
-
-  // ---- 1) 서버에서 불러오기 시도 ----
-  if (user && dateISO) {
-    try {
-      data = await apiGet(`/api/planner?date=${dateISO.slice(0, 10)}`);
-    } catch (e) {
-      console.error("서버 로드 실패:", e);
+    if (!username || !password) {
+      authMsg.textContent = "아이디와 비밀번호를 모두 입력하세요.";
+      authMsg.style.color = "#d33";
+      return;
     }
-  }
+    if (username.includes(" ")) {
+      authMsg.textContent = "아이디에 공백은 사용할 수 없습니다.";
+      authMsg.style.color = "#d33";
+      return;
+    }
+    if (password.length < 4) {
+      authMsg.textContent = "비밀번호는 최소 4자 이상이어야 합니다.";
+      authMsg.style.color = "#d33";
+      return;
+    }
 
-  // ---- 2) 서버 실패 → 로컬에서 불러오기 ----
-  if (!data && key) {
-    const raw = localStorage.getItem(key);
-    if (raw) {
-      try {
-        data = JSON.parse(raw);
-      } catch (e) {
-        console.error("로컬 파싱 실패:", e);
+    try {
+      await apiPost("/api/signup", { username, password });
+      authMsg.textContent = "회원가입 완료! 이제 로그인하세요.";
+      authMsg.style.color = "#2a7";
+      $("#signup-username").value = "";
+      $("#signup-password").value = "";
+    } catch (err) {
+      authMsg.textContent = err.message;
+      authMsg.style.color = "#d33";
+    }
+  });
+
+  // 로그인
+  loginForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = $("#login-username").value.trim();
+    const password = $("#login-password").value;
+
+    try {
+      const data = await apiPost("/api/login", { username, password });
+      // 서버가 로그인 성공하면 세션을 쿠키에 저장, username은 UI용으로 localStorage에 저장
+      setCurrentUser(data.username || username);
+
+      $("#login-username").value = "";
+      $("#login-password").value = "";
+
+      renderAuthUI();
+      // 로그인 후 현재 날짜 데이터 로드
+      window.__plannerLoad && window.__plannerLoad();
+    } catch (err) {
+      authMsg.textContent = err.message;
+      authMsg.style.color = "#d33";
+    }
+  });
+
+  // 로그아웃
+  logoutBtn?.addEventListener("click", async () => {
+    try {
+      await apiPost("/api/logout", {});
+    } catch (e) {
+      // 실패해도 일단 클라이언트 상태는 초기화
+    }
+    setCurrentUser(null);
+    renderAuthUI();
+  });
+
+  // 페이지 처음 열 때, 서버에 세션이 살아있는지 체크
+  (async () => {
+    try {
+      const me = await apiGet("/api/me"); // { username } 또는 null
+      if (me && me.username) {
+        setCurrentUser(me.username);
+      } else {
+        setCurrentUser(null);
       }
+    } catch {
+      setCurrentUser(null);
     }
-  }
+    renderAuthUI();
+  })();
+});
 
-  // ---- 3) 화면 반영 ----
-  const $ = (s) => document.querySelector(s);
-
-  $("#goal-text").value = data?.goal || "";
-  $("#memo-text").value = data?.memo || "";
-
-  for (let i = 1; i <= 10; i++) {
-    const sel = $("#sub" + i);
-    const ta = document.querySelector(`#detail${i} textarea`);
-    const img = document.querySelector(`#detail${i} img.image`);
-
-    if (sel) sel.value = data?.subjects?.[i - 1] || "";
-    if (ta) ta.value = data?.details?.[i - 1]?.text || "";
-    if (img) {
-      const checked = data?.details?.[i - 1]?.checked;
-      img.src = checked ? "images/체크표시_원.png" : "images/원.png";
-    }
-  }
-
-  // 타임테이블
-  const table = document.getElementById("timetable");
+function toggleImage(img) {
+  const src = img.getAttribute("src");          // 상대경로 그대로 비교
+  const isChecked = src.endsWith("체크표시_원.png");
+  img.setAttribute("src", isChecked ? "images/원.png" : "images/체크표시_원.png");
+}//체크표시이미지
+ // === [NEW] Per-user × Per-date autosave/load ==============================
+// === Per-user × Per-date autosave/load (서버 버전) ==============
+(() => {
+  const STORAGE_DATE_KEY = "selectedDate"; // 날짜는 그대로 localStorage 사용 (UI용)
   const COLORS = ["#ff4b4b", "#ffa54b", "#fff54b", "#4bff4b", "#4b94ff", "#9b4bff", "#9e9e9e"];
 
-  if (table) {
-    [...table.children].forEach((c) => {
-      if (c.textContent.trim() !== "") return;
-      c.style.backgroundColor = "";
-      delete c.dataset.cidx;
-    });
+  const $ = (sel) => document.querySelector(sel);
+  const getCurrentUser = () => localStorage.getItem("authCurrentUser") || null;
+  const getDateKey = () => {
+    const iso = localStorage.getItem(STORAGE_DATE_KEY);
+    return iso ? iso.slice(0, 10) : null; // YYYY-MM-DD
+  };
 
-    const map = data?.timetable || {};
-    Object.entries(map).forEach(([id, idx]) => {
-      const cell = document.getElementById(id);
-      if (!cell) return;
-      cell.dataset.cidx = idx;
-      cell.style.backgroundColor = COLORS[idx];
-    });
+  // 화면 → 객체 수집
+  function collect() {
+    const data = {
+      goal: $("#goal-text")?.value || "",
+      memo: $("#memo-text")?.value || "",
+      subjects: [],
+      details: [],     // { text, checked }
+      timetable: {},   // { [cellId]: colorIndex }
+    };
 
-    // 순공시간 다시 계산
-    const painted = [...table.children].filter((c) => c.dataset.cidx !== undefined).length;
-    const m = painted * 10;
-    const h = Math.floor(m / 60);
-    document.getElementById("timetext").textContent = `${h}시간 ${m % 60}분`;
+    for (let i = 1; i <= 10; i++) {
+      const sel = $("#sub" + i);
+      const ta = document.querySelector(`#detail${i} textarea`);
+      const img = document.querySelector(`#detail${i} img.image`);
+      data.subjects.push(sel ? sel.value : "");
+      data.details.push({
+        text: ta ? ta.value : "",
+        checked: img ? img.getAttribute("src").endsWith("체크표시_원.png") : false,
+      });
+    }
+
+    const timetable = $("#timetable");
+    if (timetable) {
+      timetable.querySelectorAll("#timetable > div").forEach((c) => {
+        if (c.textContent.trim() !== "") return;          // 숫자칸 제외
+        if (c.dataset.cidx !== undefined) {
+          data.timetable[c.id] = Number(c.dataset.cidx);  // 색 인덱스 저장
+        }
+      });
+    }
+    return data;
   }
-}
 
-// 전역에서 호출 가능하게 등록
-window.__plannerSave = planner_save;
-window.__plannerLoad = planner_load;
-// ========================= 자동 저장 이벤트 =========================
-document.addEventListener("DOMContentLoaded", () => {
-  // textarea, input, memo, goal 입력 시 저장
+  // 저장: 서버로 보내기
+  async function save() {
+    const user = getCurrentUser();
+    const dkey = getDateKey();
+    if (!user || !dkey) return;
+
+    const data = collect();
+    try {
+      await apiPost("/api/planner/save", {
+        date: dkey,
+        data,
+      });
+    } catch (e) {
+      console.error("저장 실패:", e);
+    }
+  }
+
+  // 로드: 서버에서 가져와서 화면에 반영
+  async function loadAll() {
+    const user = getCurrentUser();
+    const dkey = getDateKey();
+    if (!user || !dkey) return;
+
+    let data = null;
+    try {
+      data = await apiGet(`/api/planner?date=${encodeURIComponent(dkey)}`);
+    } catch (e) {
+      console.error("불러오기 실패:", e);
+    }
+
+    // 데이터 없으면 기본값
+    $("#goal-text") && ($("#goal-text").value = data?.goal || "");
+    $("#memo-text") && ($("#memo-text").value = data?.memo || "");
+
+    for (let i = 1; i <= 10; i++) {
+      const sel = $("#sub" + i);
+      const ta = document.querySelector(`#detail${i} textarea`);
+      const img = document.querySelector(`#detail${i} img.image`);
+
+      if (sel) sel.value = data?.subjects?.[i - 1] || "";
+      if (ta) ta.value = data?.details?.[i - 1]?.text || "";
+      if (img) {
+        const checked = !!(data?.details?.[i - 1]?.checked);
+        img.setAttribute("src", checked ? "images/체크표시_원.png" : "images/원.png");
+      }
+    }
+
+    // timetable 초기화 후 채색 복원
+    const timetable = $("#timetable");
+    if (timetable) {
+      timetable.querySelectorAll("#timetable > div").forEach((c) => {
+        if (c.textContent.trim() !== "") return; // 숫자칸 제외
+        c.style.backgroundColor = "";
+        delete c.dataset.cidx;
+      });
+
+      const map = data?.timetable || {};
+      Object.entries(map).forEach(([id, idx]) => {
+        const cell = document.getElementById(id);
+        if (!cell) return;
+        cell.dataset.cidx = String(idx);
+        cell.style.backgroundColor = COLORS[idx];
+      });
+
+      // 순공시간 텍스트 갱신
+      const paintedCount = [...timetable.querySelectorAll("#timetable > div")]
+        .filter((d) => d.dataset.cidx !== undefined).length;
+      const totalMinutes = paintedCount * 10;
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      const timetext = document.getElementById("timetext");
+      if (timetext) timetext.textContent = `${h}시간 ${m}분`;
+    }
+  }
+
+  // 외부에서 호출 가능하게 노출
+  window.__plannerSave = save;
+  window.__plannerLoad = loadAll;
+
+  // 입력/변경 시 자동 저장
   document.addEventListener("input", (e) => {
-    if (e.target.matches("#goal-text, #memo-text, .body textarea")) {
-      window.__plannerSave && window.__plannerSave();
-    }
+    if (e.target.matches("#goal-text, #memo-text, .body textarea")) save();
   });
-
-  // select 변경 시 저장
   document.addEventListener("change", (e) => {
-    if (e.target.matches(".body select")) {
-      window.__plannerSave && window.__plannerSave();
-    }
+    if (e.target.matches(".body select")) save();
+  });
+  // timetable 클릭 시에도 저장
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("#timetable")) save();
   });
 
-  // 타임테이블 색칠 시 저장 (BLOCK 2에서 처리됨)
-});
-// ========================= 페이지 최초 로드 =========================
-window.addEventListener("load", () => {
-  if (window.__plannerLoad) window.__plannerLoad();
-});
+  // 날짜가 바뀌면 자동 로드
+  const dateBox = document.getElementById("date");
+  if (dateBox) {
+    const mo = new MutationObserver(() => loadAll());
+    mo.observe(dateBox, { childList: true, subtree: true, characterData: true });
+    document.addEventListener("click", (ev) => {
+      if (ev.target.closest("#date")) setTimeout(loadAll, 0);
+    });
+  }
+
+  // 페이지 로드시 한 번 로드
+  window.addEventListener("load", loadAll);
+})();
