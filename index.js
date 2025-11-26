@@ -168,23 +168,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 🔥 날짜 클릭 시 자동 loadAll() 실행
       btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        selectedDate = new Date(y, m, d);
-        textH1.textContent = fmtKR(selectedDate);
+  e.stopPropagation();
 
-        const iso = selectedDate.toISOString();
-        localStorage.setItem(STORAGE_KEY, iso);
+  // 🔥 1) 날짜 바꾸기 전에, 먼저 지금 화면(현재 날짜) 내용 저장
+  if (window.__plannerSave) {
+    try {
+      await window.__plannerSave();
+    } catch (err) {
+      console.error("자동 저장 실패:", err);
+    }
+  }
 
-        closeCalendar();
+  // 🔥 2) 이제 날짜를 새로 설정
+  selectedDate = new Date(y, m, d);
+  textH1.textContent = fmtKR(selectedDate);
 
-        if (window.__plannerLoad) {
-          try {
-            await window.__plannerLoad();
-          } catch (err) {
-            console.error("로드 오류:", err);
-          }
-        }
-      });
+  const iso = selectedDate.toISOString();
+  localStorage.setItem(STORAGE_KEY, iso);
+
+  closeCalendar();
+
+  // 🔥 3) 새 날짜의 데이터 불러오기
+  if (window.__plannerLoad) {
+    try {
+      await window.__plannerLoad();
+    } catch (err) {
+      console.error("로드 오류:", err);
+    }
+  }
+});
+
 
       grid.appendChild(btn);
     }
