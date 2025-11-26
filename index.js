@@ -610,18 +610,6 @@ function toggleImage(img) {
     if (e.target.closest("#timetable")) save();
   });
 
-
-
-  // 날짜 클릭 시 자동 로드 실행
-  const dateBox = document.getElementById("date");
-  if (dateBox) {
-    dateBox.addEventListener("click", () => {
-      setTimeout(() => {
-        window.__plannerLoad && window.__plannerLoad();
-      }, 0);
-    });
-  }
-
   // 페이지 로드시 로드
   window.addEventListener("load", loadAll);
 })();
