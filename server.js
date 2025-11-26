@@ -27,18 +27,22 @@ app.use(
 // --- 정적 파일 제공 ---
 app.use(express.static("public"));
 
-// --- 회원가입 ---
 app.post("/api/signup", async (req, res) => {
   const { username, password } = req.body;
   const hash = await bcrypt.hash(password, 10);
 
   const { data, error } = await supabase
     .from("users")
-    .insert([{ username, password}]);
+    .insert([{ username, password: hash }]);  // ← 여기 고침
 
-  if (error) return res.status(400).json({ message: "회원가입 실패" });
+  if (error) {
+    console.error(error);
+    return res.status(400).json({ message: "회원가입 실패" });
+  }
+
   res.json({ message: "OK" });
 });
+
 
 // --- 로그인 ---
 app.post("/api/login", async (req, res) => {
