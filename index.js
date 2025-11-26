@@ -599,8 +599,13 @@ function toggleImage(img) {
     if (e.target.matches(".body select")) save();
   });
   document.addEventListener("click", (e) => {
+    // 🔥 날짜 영역 클릭 시 save 금지 (핵심)
+    if (e.target.closest("#date")) return;
+    if (e.target.closest(".calendar")) return;
+
     if (e.target.closest("#timetable")) save();
   });
+
 
   // 날짜 클릭 시 자동 로드 실행
   const dateBox = document.getElementById("date");
