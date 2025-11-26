@@ -175,14 +175,27 @@ document.addEventListener("DOMContentLoaded", () => {
         cursor: "pointer",
       });
 
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        selectedDate = new Date(y, m, d);
-        textH1.textContent = fmtKR(selectedDate);
-        // 🔹 날짜를 localStorage에 저장
-        localStorage.setItem(STORAGE_KEY, selectedDate.toISOString());
-        closeCalendar();
-      });
+  btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+
+    // 1) 날짜 바뀌기 전에 현재 화면 저장
+    if (window.__plannerSave) {
+      try { await window.__plannerSave(); } catch(e) { console.error(e); }
+    }
+
+    // 2) 날짜 설정
+    selectedDate = new Date(y, m, d);
+    textH1.textContent = fmtKR(selectedDate);
+    localStorage.setItem(STORAGE_KEY, selectedDate.toISOString());
+
+    closeCalendar();
+
+    // 3) 화면 완전히 갱신된 후 load 실행
+    setTimeout(() => {
+      if (window.__plannerLoad) window.__plannerLoad();
+    }, 20);
+  });
+
 
       grid.appendChild(btn);
     }
@@ -608,18 +621,10 @@ function toggleImage(img) {
     if (e.target.matches(".body select")) save();
   });
   // timetable 클릭 시에도 저장
-  document.addEventListener("click", (e) => {
-    if (e.target.closest("#timetable")) save();
-  });
 
   // 날짜가 바뀌면 자동 로드
   const dateBox = document.getElementById("date");
   if (dateBox) {
-    const mo = new MutationObserver(() => loadAll());
-    mo.observe(dateBox, { childList: true, subtree: true, characterData: true });
-    document.addEventListener("click", (ev) => {
-      if (ev.target.closest("#date")) setTimeout(loadAll, 0);
-    });
   }
 
   // 페이지 로드시 한 번 로드
