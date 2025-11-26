@@ -34,7 +34,7 @@ app.post("/api/signup", async (req, res) => {
 
   const { data, error } = await supabase
     .from("users")
-    .insert([{ username, password: hash }]);
+    .insert([{ username, password}]);
 
   if (error) return res.status(400).json({ message: "회원가입 실패" });
   res.json({ message: "OK" });
