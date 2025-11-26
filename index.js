@@ -54,10 +54,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const savedDateStr = localStorage.getItem(STORAGE_KEY);
   let selectedDate = savedDateStr ? new Date(savedDateStr) : new Date();
-  textH1.textContent = `${selectedDate.getFullYear()}년 ${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`;
 
-  let calendarEl = null;
-  const fmtKR = (d) => `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+    // 🔥 처음 들어온 경우에도 localStorage에 오늘 날짜를 찍어둔다
+    if (!savedDateStr) {
+      localStorage.setItem(STORAGE_KEY, selectedDate.toISOString());
+    }
+
+  textH1.textContent = `${selectedDate.getFullYear()}년 ${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`;
 
   const openCalendar = (seed) => {
     if (calendarEl) return;
@@ -527,34 +530,77 @@ function toggleImage(img) {
 
   // 저장 (서버 전송)
   async function save() {
-    const user = getCurrentUser();
-    const dkey = getDateKey();
-    if (!user || !dkey) return;
+      const LOCAL_PREFIX = "planner_";
 
+  const getLocalKey = () => {
+    const user = getCurrentUser() || "guest";   // 로그인 안 돼도 일단 브라우저에 저장
+    const date = getDateKey();
+    if (!date) return null;
+    return `${LOCAL_PREFIX}${user}_${date}`;    // 예: planner_hawonchel_2025-11-27
+  };
+
+  // 저장 (로컬 + 서버)
+  async function save() {
+    const dkey = getDateKey();
+    const storageKey = getLocalKey();
     const data = collect();
+
+    // 🔥 1) 무조건 브라우저 localStorage에 먼저 저장
+    if (storageKey) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(data));
+      } catch (e) {
+        console.error("로컬 저장 실패:", e);
+      }
+    }
+
+    // 🔥 2) 서버 저장은 “되면 좋고, 실패해도 화면 데이터는 살아있음”
+    const user = getCurrentUser();
+    if (!user || !dkey) return;   // 로그인 안 돼 있으면 서버 저장은 스킵
+
     try {
       await apiPost("/api/planner/save", {
         date: dkey,
         data,
       });
     } catch (err) {
-      console.error("저장 실패:", err);
+      console.error("서버 저장 실패(화면 데이터는 로컬에 남아있음):", err);
     }
+  }
+
   }
 
   // 로드 (서버 → 화면 반영)
   async function loadAll() {
-    const user = getCurrentUser();
+      // 로드 (서버 → 실패하면 로컬 → 화면)
+  async function loadAll() {
     const dkey = getDateKey();
-    if (!user || !dkey) return;
-
+    const storageKey = getLocalKey();
+    const user = getCurrentUser();
     let data = null;
-    try {
-      data = await apiGet(`/api/planner?date=${encodeURIComponent(dkey)}`);
-    } catch (err) {
-      console.error("로드 실패:", err);
+
+    // 🔥 1) 로그인 되어 있으면 서버에서 먼저 시도
+    if (user && dkey) {
+      try {
+        data = await apiGet(`/api/planner?date=${encodeURIComponent(dkey)}`);
+      } catch (err) {
+        console.error("서버 로드 실패:", err);
+      }
     }
 
+    // 🔥 2) 서버에서 못 받았으면 localStorage에서 불러오기
+    if (!data && storageKey) {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch (e) {
+          console.error("로컬 데이터 파싱 실패:", e);
+        }
+      }
+    }
+
+    // 🔥 3) 여기부터는 기존 코드 그대로 (data 없으면 기본값으로)
     $("#goal-text") && ($("#goal-text").value = data?.goal || "");
     $("#memo-text") && ($("#memo-text").value = data?.memo || "");
 
@@ -571,7 +617,6 @@ function toggleImage(img) {
       }
     }
 
-    // 타임테이블 복원
     const timetable = $("#timetable");
     if (timetable) {
       timetable.querySelectorAll("#timetable > div").forEach((c) => {
@@ -588,16 +633,16 @@ function toggleImage(img) {
         cell.style.backgroundColor = COLORS[idx];
       });
 
-      // 순공시간 계산
       const paintedCount = [...timetable.querySelectorAll("#timetable > div")]
         .filter((d) => d.dataset.cidx !== undefined).length;
       const totalMinutes = paintedCount * 10;
       const h = Math.floor(totalMinutes / 60);
       const m = totalMinutes % 60;
-
       const timetext = document.getElementById("timetext");
       if (timetext) timetext.textContent = `${h}시간 ${m}분`;
     }
+  }
+
   }
 
   // 외부에서 호출 가능하도록 등록
