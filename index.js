@@ -539,79 +539,34 @@ function toggleImage(img) {
   }
 
   // 로드: 서버에서 가져와서 화면에 반영
-async function loadAll() {
-  const user = getCurrentUser();
-  const dkey = getDateKey();
-  if (!user || !dkey) return;
+  async function loadAll() {
+    const user = getCurrentUser();
+    const dkey = getDateKey();
+    if (!user || !dkey) return;
 
-  let data = null;
-  try {
-    data = await apiGet(`/api/planner?date=${encodeURIComponent(dkey)}`);
-  } catch (e) {
-    console.error("불러오기 실패:", e);
-  }
-
-  // 🔥 여기 추가: 데이터가 없으면 화면을 건드리지 않고 그대로 둔다
-  if (!data) {
-    return;
-  }
-
-  // =========================
-  // 🔹 여기부터는 "데이터가 있을 때만" 화면을 덮어씀
-  // =========================
-
-  // 목표 / 메모
-  if ($("#goal-text")) {
-    $("#goal-text").value = data.goal || "";
-  }
-  if ($("#memo-text")) {
-    $("#memo-text").value = data.memo || "";
-  }
-
-  // 과목 / 세부계획 / 체크표시
-  for (let i = 1; i <= 10; i++) {
-    const sel = $("#sub" + i);
-    const ta = document.querySelector(`#detail${i} textarea`);
-    const img = document.querySelector(`#detail${i} img.image`);
-
-    if (sel) sel.value = data.subjects?.[i - 1] || "";
-    if (ta) ta.value = data.details?.[i - 1]?.text || "";
-    if (img) {
-      const checked = !!(data.details?.[i - 1]?.checked);
-      img.setAttribute("src", checked ? "images/체크표시_원.png" : "images/원.png");
+    let data = null;
+    try {
+      data = await apiGet(`/api/planner?date=${encodeURIComponent(dkey)}`);
+    } catch (e) {
+      console.error("불러오기 실패:", e);
     }
-  }
 
-  // 타임테이블 색 초기화 후 복원
-  const timetable = $("#timetable");
-  if (timetable) {
-    // 먼저 비우고
-    timetable.querySelectorAll("#timetable > div").forEach((c) => {
-      if (c.textContent.trim() !== "") return; // 숫자 칸은 그대로
-      c.style.backgroundColor = "";
-      delete c.dataset.cidx;
-    });
+    // 데이터 없으면 기본값
+    $("#goal-text") && ($("#goal-text").value = data?.goal || "");
+    $("#memo-text") && ($("#memo-text").value = data?.memo || "");
 
-    // 저장된 색 복원
-    const map = data.timetable || {};
-    Object.entries(map).forEach(([id, idx]) => {
-      const cell = document.getElementById(id);
-      if (!cell) return;
-      cell.dataset.cidx = String(idx);
-      cell.style.backgroundColor = COLORS[idx];
-    });
+    for (let i = 1; i <= 10; i++) {
+      const sel = $("#sub" + i);
+      const ta = document.querySelector(`#detail${i} textarea`);
+      const img = document.querySelector(`#detail${i} img.image`);
 
-    // 순공시간도 다시 계산
-    const cells = Array.from(timetable.querySelectorAll("#timetable > div"));
-    const paintedCount = cells.filter((d) => d.dataset.cidx !== undefined).length;
-    const totalMinutes = paintedCount * 10;
-    const h = Math.floor(totalMinutes / 60);
-    const m = totalMinutes % 60;
-    const timetext = document.getElementById("timetext");
-    if (timetext) timetext.textContent = `${h}시간 ${m}분`;
-  }
-}
-
+      if (sel) sel.value = data?.subjects?.[i - 1] || "";
+      if (ta) ta.value = data?.details?.[i - 1]?.text || "";
+      if (img) {
+        const checked = !!(data?.details?.[i - 1]?.checked);
+        img.setAttribute("src", checked ? "images/체크표시_원.png" : "images/원.png");
+      }
+    }
 
     // timetable 초기화 후 채색 복원
     const timetable = $("#timetable");
