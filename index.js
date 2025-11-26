@@ -599,8 +599,20 @@ function toggleImage(img) {
     if (e.target.matches(".body select")) save();
   });
   document.addEventListener("click", (e) => {
-    if (e.target.closest("#timetable")) save();
-  });
+  // 날짜 클릭 시 저장 금지 (초기화 방지 핵심)
+  if (e.target.closest("#date")) return;
+
+  // 체크 이미지 클릭 시 저장
+  if (e.target.classList.contains("image")) {
+    save();
+    return;
+  }
+
+  // 타임테이블 클릭 시 저장
+  if (e.target.closest("#timetable")) {
+    save();
+  }
+});
 
   // 날짜 클릭 시 자동 로드 실행
   const dateBox = document.getElementById("date");
