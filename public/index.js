@@ -233,9 +233,17 @@ document.addEventListener("DOMContentLoaded", () => {
     return wrap;
   };
 
-  dateDiv.addEventListener("click", () => {
-    if (!calendarEl) openCalendar(selectedDate || new Date());
-  });
+    // 날짜 박스를 눌렀을 때 캘린더 열기 (PC + 태블릿/폰 모두)
+  const openHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!calendarEl) {
+      openCalendar(selectedDate || new Date());
+    }
+  };
+
+  dateDiv.addEventListener("click", openHandler);
+  dateDiv.addEventListener("touchstart", openHandler);
 });//날짜
 document.addEventListener("DOMContentLoaded", ()=>{
   for (let i = 1; i <= 168; i++) {
@@ -621,20 +629,8 @@ function toggleImage(img) {
   window.__plannerSave = save;
   window.__plannerLoad = loadAll;
 
-  // 입력/변경 시 자동 저장
-  document.addEventListener("input", (e) => {
-    if (e.target.matches("#goal-text, #memo-text, .body textarea")) save();
-  });
-  document.addEventListener("change", (e) => {
-    if (e.target.matches(".body select")) save();
-  });
-  // timetable 클릭 시에도 저장
-
   // 날짜가 바뀌면 자동 로드
   const dateBox = document.getElementById("date");
   if (dateBox) {
   }
-
-  // 페이지 로드시 한 번 로드
-  window.addEventListener("load", loadAll);
 })();
