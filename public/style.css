@@ -222,3 +222,8 @@ select{
     resize: none;
     font-size: large;
 }
+#calendarBtn {
+  position: relative;
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+}
