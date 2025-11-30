@@ -19,6 +19,8 @@ body {
   box-shadow: 0 6px 16px rgba(0,0,0,0.15);
   margin-top: 0px;
   margin-bottom: 20px;/* 아래쪽 여백 (main과 간격) */
+  position: relative;
+  z-index: 1;
 }
 /* 🔹 main 그대로 가운데 배치 */
 .main {
@@ -27,6 +29,8 @@ body {
   background-color: #fff;
   margin-bottom: 40px;
   border-radius: 12px;
+  position: relative;
+  z-index: 2;
 }
 .head{
     width: 700px;
