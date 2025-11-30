@@ -226,3 +226,6 @@ select{
     resize: none;
     font-size: large;
 }
+#auth, .main, #date {
+  background-color: rgba(255, 0, 0, 0.15) !important;
+}
