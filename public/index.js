@@ -242,6 +242,10 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   dateDiv.addEventListener("click", openHandler);
+  dateDiv.addEventListener("touchstart", (e) => {
+    e.preventDefault(); // 모바일에서 터치 시 스크롤링/확대 등 브라우저 기본 동작 방지
+    openHandler(e);
+  });
 });//날짜
 document.addEventListener("DOMContentLoaded", ()=>{
   for (let i = 1; i <= 168; i++) {
