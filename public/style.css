@@ -226,6 +226,8 @@ select{
     resize: none;
     font-size: large;
 }
-#auth, .main, #date {
-  background-color: rgba(255, 0, 0, 0.15) !important;
+@media (max-width: 700px) {
+  .head {
+    grid-template-columns: 1fr 1fr; /* 모바일에서는 반반 배치 */
+  }
 }
