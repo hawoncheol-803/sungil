@@ -601,7 +601,22 @@ function toggleImage(img) {
   window.__plannerLoad = loadAll;
 
   // 날짜가 바뀌면 자동 로드
-  const dateBox = document.getElementById("date");
-  if (dateBox) {
-  }
+const dateBox = document.getElementById("date");
+if (dateBox) {
+  const mo = new MutationObserver(() => {
+    // 날짜 텍스트 바뀌면 -> 자동 로드
+    window.__plannerLoad && window.__plannerLoad();
+  });
+  mo.observe(dateBox, { childList: true, subtree: true, characterData: true });
+
+  // 캘린더 내부 클릭 후 비동기로 한 번 더 체크
+  document.addEventListener("click", (ev) => {
+    if (ev.target.closest("#date")) {
+      setTimeout(() => {
+        window.__plannerLoad && window.__plannerLoad();
+      }, 0);
+    }
+  });
+}
+
 })();
