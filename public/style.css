@@ -6,7 +6,6 @@ body {
   min-height: 100vh;      /* 화면 높이 채우기 */
   margin: 0;
   background: #f7f7f7;
-   min-width: 700px;   /* 페이지 전체 최소 너비를 700px로 고정 */
   overflow-x: auto;
 }
 /* 🔹 회원가입/로그인 박스 */
@@ -222,8 +221,9 @@ select{
     resize: none;
     font-size: large;
 }
-#calendarBtn {
-  position: relative;
-  z-index: 9999 !important;
-  pointer-events: auto !important;
+@media (max-width: 700px) {
+  body {
+    min-width: 100%;    /* 모바일에서는 화면 너비에 맞추기 */
+    overflow-x: hidden; /* 가로 스크롤 제거 */
+  }
 }
