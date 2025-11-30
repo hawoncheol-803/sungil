@@ -235,8 +235,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 날짜 박스를 눌렀을 때 캘린더 열기 (PC + 태블릿/폰 모두)
   const openHandler = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
     if (!calendarEl) {
       openCalendar(selectedDate || new Date());
     }
