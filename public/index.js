@@ -81,13 +81,23 @@ document.addEventListener("DOMContentLoaded", () => {
     calendarEl = buildCalendar(base);
     dateDiv.appendChild(calendarEl);
 
-    // 바깥 클릭 시 닫기
-    setTimeout(() => {
-      const onDocClick = (e) => {
-        if (!dateDiv.contains(e.target)) closeCalendar();
-      };
-      document.addEventListener("click", onDocClick, { once: true });
-    });
+    const closeHandler = (e) => {
+      // #date 영역(날짜 + 캘린더)에 포함되지 않은 곳을 클릭/터치했을 때만 닫기
+      if (!dateDiv.contains(e.target)) {
+        closeCalendar();
+        // 닫기 성공 후 리스너 제거
+        document.removeEventListener("click", closeHandler);
+        document.removeEventListener("touchstart", closeHandler);
+      }
+    };
+    
+    // 이전에 등록된 것이 있을 수 있으므로 먼저 제거 (안전 장치)
+    document.removeEventListener("click", closeHandler);
+    document.removeEventListener("touchstart", closeHandler);
+
+    // 새로운 리스너 등록
+    document.addEventListener("click", closeHandler);
+    document.addEventListener("touchstart", closeHandler);
   };
 
   const closeCalendar = () => {
