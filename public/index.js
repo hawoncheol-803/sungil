@@ -58,17 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // -----------------------
   const savedDateStr = localStorage.getItem(STORAGE_KEY);
   let selectedDate = savedDateStr ? new Date(savedDateStr) : null;
-
   if (selectedDate) {
-    // 저장된 날짜 있으면 그걸 사용
     textH1.textContent = `${selectedDate.getFullYear()}년 ${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`;
-  } else {
-    // ❗처음 들어온 경우: 오늘 날짜로 초기화
-    selectedDate = new Date();
-    textH1.textContent = fmtKR(selectedDate);
-    localStorage.setItem(STORAGE_KEY, selectedDate.toISOString());
   }
-
 
   let calendarEl = null;
 
@@ -81,23 +73,13 @@ document.addEventListener("DOMContentLoaded", () => {
     calendarEl = buildCalendar(base);
     dateDiv.appendChild(calendarEl);
 
-    const closeHandler = (e) => {
-      // #date 영역(날짜 + 캘린더)에 포함되지 않은 곳을 클릭/터치했을 때만 닫기
-      if (!dateDiv.contains(e.target)) {
-        closeCalendar();
-        // 닫기 성공 후 리스너 제거
-        document.removeEventListener("click", closeHandler);
-        document.removeEventListener("touchstart", closeHandler);
-      }
-    };
-    
-    // 이전에 등록된 것이 있을 수 있으므로 먼저 제거 (안전 장치)
-    document.removeEventListener("click", closeHandler);
-    document.removeEventListener("touchstart", closeHandler);
-
-    // 새로운 리스너 등록
-    document.addEventListener("click", closeHandler);
-    document.addEventListener("touchstart", closeHandler);
+    // 바깥 클릭 시 닫기
+    setTimeout(() => {
+      const onDocClick = (e) => {
+        if (!dateDiv.contains(e.target)) closeCalendar();
+      };
+      document.addEventListener("click", onDocClick, { once: true });
+    });
   };
 
   const closeCalendar = () => {
@@ -193,27 +175,14 @@ document.addEventListener("DOMContentLoaded", () => {
         cursor: "pointer",
       });
 
-  btn.addEventListener("click", async (e) => {
-      e.stopPropagation();
-
-    // 1) 날짜 바뀌기 전에 현재 화면 저장
-    if (window.__plannerSave) {
-      try { await window.__plannerSave(); } catch(e) { console.error(e); }
-    }
-
-    // 2) 날짜 설정
-    selectedDate = new Date(y, m, d);
-    textH1.textContent = fmtKR(selectedDate);
-    localStorage.setItem(STORAGE_KEY, selectedDate.toISOString());
-
-    closeCalendar();
-
-    // 3) 화면 완전히 갱신된 후 load 실행
-    setTimeout(() => {
-      if (window.__plannerLoad) window.__plannerLoad();
-    }, 20);
-  });
-
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        selectedDate = new Date(y, m, d);
+        textH1.textContent = fmtKR(selectedDate);
+        // 🔹 날짜를 localStorage에 저장
+        localStorage.setItem(STORAGE_KEY, selectedDate.toISOString());
+        closeCalendar();
+      });
 
       grid.appendChild(btn);
     }
@@ -243,18 +212,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return wrap;
   };
 
-    // 날짜 박스를 눌렀을 때 캘린더 열기 (PC + 태블릿/폰 모두)
-  const openHandler = (e) => {
-    e.stopPropagation();
-    if (!calendarEl) {
-      openCalendar(selectedDate || new Date());
-    }
-  };
-
-  dateDiv.addEventListener("click", openHandler);
-  dateDiv.addEventListener("touchstart", (e) => {
-    e.preventDefault(); // 모바일에서 터치 시 스크롤링/확대 등 브라우저 기본 동작 방지
-    openHandler(e);
+  dateDiv.addEventListener("click", () => {
+    if (!calendarEl) openCalendar(selectedDate || new Date());
   });
 });//날짜
 document.addEventListener("DOMContentLoaded", ()=>{
