@@ -175,14 +175,31 @@ document.addEventListener("DOMContentLoaded", () => {
         cursor: "pointer",
       });
 
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", async (e) => {
         e.stopPropagation();
+
+        // 🔥 날짜 바꾸기 직전에 현재 화면 먼저 저장!
+        try {
+          await window.__plannerSave();
+        } catch (err) {
+          console.error("이전 날짜 저장 중 오류:", err);
+        }
+
+        // 날짜 변경
         selectedDate = new Date(y, m, d);
         textH1.textContent = fmtKR(selectedDate);
-        // 🔹 날짜를 localStorage에 저장
+
+        // 저장된 날짜 업데이트
         localStorage.setItem(STORAGE_KEY, selectedDate.toISOString());
+
         closeCalendar();
+
+        // 🔥 저장 후 반드시 새 날짜 데이터 불러오기
+        setTimeout(() => {
+          window.__plannerLoad();
+        }, 50);
       });
+
 
       grid.appendChild(btn);
     }
