@@ -1,9 +1,9 @@
 body {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 100vh;
+  flex-direction: column; /* 위에서 아래로 쌓기 */
+  align-items: center;    /* 가로 가운데 정렬 */
+  justify-content: flex-start; /* 위쪽에서 시작 */
+  min-height: 100vh;      /* 화면 높이 채우기 */
   margin: 0;
   background: #f7f7f7;
 }
@@ -16,7 +16,7 @@ body {
   background-color: #fff;
   box-shadow: 0 6px 16px rgba(0,0,0,0.15);
   margin-top: 0px;
-  margin-bottom: 20px;
+  margin-bottom: 20px;/* 아래쪽 여백 (main과 간격) */
 }
 /* 🔹 main 그대로 가운데 배치 */
 .main {
@@ -30,8 +30,9 @@ body {
     width: 700px;
     height: 100px;
     display: grid;
-    grid-template-rows: 50px 50px;
-    grid-template-columns: 490px 210px;
+
+    grid-template-rows: 50px 50px; /*행 50px 2개*/
+    grid-template-columns: 490px 210px; /*열 2개*/
     grid-template-areas:
     "date time"
     "goal time";
@@ -55,6 +56,7 @@ body {
     height: 500px;
     border-bottom: 3px solid #ccc;
     display: grid;
+
     grid-template-columns: 200px 500px;
     grid-template-rows: repeat(10, 50px);
     grid-template-areas: 
@@ -67,34 +69,102 @@ body {
     "s7 d7"
     "s8 d8"
     "s9 d9"
-    "s10 d10";
+    "s10 d10"; /*과목, 세부*/
 }
-#sub1{ grid-area: s1; border-right: 2px dotted #ccc; border-bottom: 2px dotted #ccc; }
-#detail1{ grid-area: d1; border-bottom: 2px dotted #ccc; }
-#sub2{ grid-area: s2; border-right: 2px dotted #ccc; border-bottom: 2px dotted #ccc; }
-#detail2{ grid-area: d2; border-bottom: 2px dotted #ccc; }
-#sub3{ grid-area: s3; border-right: 2px dotted #ccc; border-bottom: 2px dotted #ccc; }
-#detail3{ grid-area: d3; border-bottom: 2px dotted #ccc; }
-#sub4{ grid-area: s4; border-right: 2px dotted #ccc; border-bottom: 2px dotted #ccc; }
-#detail4{ grid-area: d4; border-bottom: 2px dotted #ccc; }
-#sub5{ grid-area: s5; border-right: 2px dotted #ccc; border-bottom: 2px dotted #ccc; }
-#detail5{ grid-area: d5; border-bottom: 2px dotted #ccc; }
-#sub6{ grid-area: s6; border-right: 2px dotted #ccc; border-bottom: 2px dotted #ccc; }
-#detail6{ grid-area: d6; border-bottom: 2px dotted #ccc; }
-#sub7{ grid-area: s7; border-right: 2px dotted #ccc; border-bottom: 2px dotted #ccc; }
-#detail7{ grid-area: d7; border-bottom: 2px dotted #ccc; }
-#sub8{ grid-area: s8; border-right: 2px dotted #ccc; border-bottom: 2px dotted #ccc; }
-#detail8{ grid-area: d8; border-bottom: 2px dotted #ccc; }
-#sub9{ grid-area: s9; border-right: 2px dotted #ccc; border-bottom: 2px dotted #ccc; }
-#detail9{ grid-area: d9; border-bottom: 2px dotted #ccc; }
-#sub10{ grid-area: s10; border-right: 2px dotted #ccc; }
-#detail10{ grid-area: d10; }
-
+#sub1{
+    grid-area: s1;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail1{
+    grid-area: d1;
+    border-bottom: 2px dotted #ccc;
+}
+#sub2{
+    grid-area: s2;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail2{
+    grid-area: d2;
+    border-bottom: 2px dotted #ccc;
+}
+#sub3{
+    grid-area: s3;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail3{
+    grid-area: d3;
+    border-bottom: 2px dotted #ccc;
+}
+#sub4{
+    grid-area: s4;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail4{
+    grid-area: d4;
+    border-bottom: 2px dotted #ccc;
+}
+#sub5{
+    grid-area: s5;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail5{
+    grid-area: d5;
+    border-bottom: 2px dotted #ccc;
+}
+#sub6{
+    grid-area: s6;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail6{
+    grid-area: d6;
+    border-bottom: 2px dotted #ccc;
+}
+#sub7{
+    grid-area: s7;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail7{
+    grid-area: d7;
+    border-bottom: 2px dotted #ccc;
+}
+#sub8{
+    grid-area: s8;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail8{
+    grid-area: d8;
+    border-bottom: 2px dotted #ccc;
+}
+#sub9{
+    grid-area: s9;
+    border-right: 2px dotted #ccc;
+    border-bottom: 2px dotted #ccc;
+}
+#detail9{
+    grid-area: d9;
+    border-bottom: 2px dotted #ccc;
+}
+#sub10{
+    grid-area: s10;
+    border-right: 2px dotted #ccc;
+}
+#detail10{
+    grid-area: d10;
+}
 #timetable{
     width: 700px;
     height: 170px;
     border-bottom: 3px solid #ccc;
     display: grid;
+
     grid-template-rows: repeat(6, 1fr);
     grid-template-columns: repeat(28, 1fr);
     grid-template-areas:
@@ -129,12 +199,12 @@ body {
     border: 0px;
     padding: 8px;
     font-size: 16px;
-    resize: none;
+    resize: none;              /* 크기 조절 금지 */
     line-height: 1.5;
-    white-space: pre-wrap;
-    word-break: break-word;
+    white-space: pre-wrap;     /* 줄바꿈과 공백 유지 */
+    word-break: break-word;    /* 긴 단어 자동 줄바꿈 */
     box-sizing: border-box;
-    overflow-wrap: break-word;
+    overflow-wrap: break-word; /* 텍스트 넘침 방지 */
 }
 .image{
     height: 30px; width: 30px; float: right; margin-right: 15px; margin-top: 10px; margin-bottom: 10px;
@@ -150,107 +220,14 @@ select{
     resize: none;
     font-size: large;
 }
-
 /* ============================
-   모바일 반응형 - 화면 꽉 채우기
+   모바일 화면 전체 축소 (핵심)
    ============================ */
 @media (max-width: 768px) {
   body {
-    padding: 0;
-    margin: 0;
-  }
-
-  #auth {
-    width: 100vw;
-    box-sizing: border-box;
-    border-radius: 0;
-    margin-bottom: 8px;
-    box-shadow: none;
-  }
-
-  .main {
-    width: 100vw;
-    box-sizing: border-box;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    margin-bottom: 0;
+    transform: scale(0.52);
+    transform-origin: top center;
+    width: 192%;
     overflow-x: hidden;
-  }
-
-  /* head 영역 - vw 기반으로 비율 유지 */
-  .head {
-    width: 100vw;
-    height: auto;
-    display: grid;
-    grid-template-rows: auto auto;
-    grid-template-columns: 70vw 30vw;
-    grid-template-areas:
-      "date time"
-      "goal time";
-  }
-
-
-  /* body 영역 - 과목:세부 비율 유지 */
-  .body {
-    width: 100vw;
-    height: auto;
-    display: grid;
-    grid-template-columns: 28vw 72vw;
-    grid-template-rows: repeat(10, 8vw);
-    grid-template-areas:
-      "s1 d1" "s2 d2" "s3 d3" "s4 d4" "s5 d5"
-      "s6 d6" "s7 d7" "s8 d8" "s9 d9" "s10 d10";
-  }
-
-  .body textarea {
-    width: calc(72vw - 40px);
-    height: 8vw;
-    font-size: 3vw;
-    box-sizing: border-box;
-  }
-
-  select {
-    width: 28vw;
-    font-size: 3vw;
-    box-sizing: border-box;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .image {
-    height: 5vw;
-    width: 5vw;
-    margin-right: 2vw;
-    margin-top: 1.5vw;
-    margin-bottom: 1.5vw;
-  }
-
-  /* 타임테이블 */
-  #timetable {
-    width: 100vw;
-    height: auto;
-    min-height: 100px;
-  }
-
-  /* 메모 */
-  #memo {
-    width: 100vw;
-    height: 100px;
-    box-sizing: border-box;
-  }
-
-  #memo-text {
-    width: 100%;
-    height: 100px;
-    box-sizing: border-box;
-    font-size: 3.5vw;
-  }
-
-  #goal-text {
-    width: 100%;
-    height: 100%;
-    font-size: 4vw;
-    box-sizing: border-box;
   }
 }
