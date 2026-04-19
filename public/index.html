@@ -203,29 +203,6 @@
             <textarea id="memo-text" placeholder="메모를 입력하세요..."></textarea>
         </div>
     </div>
-    <script>
-      function applyMobileScale() {
-        if (window.innerWidth <= 768) {
-          const scale = window.innerWidth / 710;
-          const auth = document.getElementById('auth');
-          const main = document.querySelector('.main');
-          if (auth) {
-            auth.style.transform = `scale(${scale})`;
-            auth.style.transformOrigin = 'top left';
-            auth.style.marginBottom = (20 * scale - (710 - window.innerWidth)) + 'px';
-          }
-          if (main) {
-            main.style.transform = `scale(${scale})`;
-            main.style.transformOrigin = 'top left';
-            main.style.marginBottom = (-1 * (710 - window.innerWidth) * 0.9) + 'px';
-          }
-          document.body.style.alignItems = 'flex-start';
-          document.body.style.overflowX = 'hidden';
-        }
-      }
-      applyMobileScale();
-      window.addEventListener('resize', applyMobileScale);
-    </script>
     <script src="index.js?v=4"></script>
 </body>
 </html>
