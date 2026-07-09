@@ -7,6 +7,11 @@ body {
   margin: 0;
   background: #f7f7f7;
 }
+/* 🔹 index.html: 로그인/회원가입 박스만 화면 정중앙에 오도록 */
+body.login-page {
+  justify-content: center;
+}
+
 /* 🔹 회원가입/로그인 박스 */
 #auth {
   width: 700px;
@@ -17,6 +22,24 @@ body {
   box-shadow: 0 6px 16px rgba(0,0,0,0.15);
   margin-top: 0px;
   margin-bottom: 20px;/* 아래쪽 여백 (main과 간격) */
+}
+
+/* 🔹 planner.html: 상단 로그인 계정 표시줄 */
+#auth-status {
+  width: 700px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+#auth-status button {
+  cursor: pointer;
 }
 /* 🔹 main 그대로 가운데 배치 */
 .main {

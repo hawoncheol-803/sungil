@@ -1,30 +1,34 @@
-// === 공통 API 함수 (index.js 맨 위에 추가) ======================
-async function apiPost(path, body) {
-  const res = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    credentials: "include", // 쿠키 세션용
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.message || "서버 요청 중 오류가 발생했습니다.");
-  }
-  return data;
-}
-async function apiGet(path) {
-  const res = await fetch(path, {
-    method: "GET",
-    credentials: "include",
-  });
-  if (res.status === 204) return null;
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.message || "서버 요청 중 오류가 발생했습니다.");
-  }
-  return data;
-}
+// === planner.html 전용: 로그인 가드 + 로그아웃 ===================
+let CURRENT_USER = null;
 
+(async () => {
+  try {
+    const me = await apiGet("/api/me");
+    if (!me || !me.username) {
+      window.location.href = "index.html";
+      return;
+    }
+    CURRENT_USER = me.username;
+    const span = document.getElementById("current-user");
+    if (span) span.textContent = `현재계정: '${CURRENT_USER}'`;
+    document.body.style.visibility = "visible";
+    // 로그인 확인 후 오늘/선택된 날짜 데이터 로드
+    window.__plannerLoad && window.__plannerLoad();
+  } catch {
+    window.location.href = "index.html";
+  }
+})();
+
+document.getElementById("logout-btn")?.addEventListener("click", async () => {
+  try {
+    await apiPost("/api/logout", {});
+  } catch (e) {
+    // 실패해도 클라이언트는 로그인 페이지로 이동
+  }
+  window.location.href = "index.html";
+});
+
+// === 날짜 선택 캘린더 ===================
 document.addEventListener("DOMContentLoaded", () => {
   const dateDiv = document.getElementById("date");
   if (!dateDiv) return;
@@ -217,6 +221,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!calendarEl) openCalendar(selectedDate || new Date());
   });
 });//날짜
+
+// === 타임테이블 div 생성 & 시간 표시 숫자 ===================
 document.addEventListener("DOMContentLoaded", ()=>{
   for (let i = 1; i <= 168; i++) {
       let div = document.createElement("div");
@@ -248,6 +254,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("155").textContent = 11;
   document.getElementById("162").textContent = 5;//6줄
 });//타임테이블 div생성&시간
+
+// === 한줄목표 칸 초과 방지 ===================
 document.addEventListener("DOMContentLoaded", () => {
   const goalInput = document.getElementById("goal-text");
 
@@ -278,50 +286,50 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   window.addEventListener("resize", updateFont);
 });//한줄목표 칸 초과x
+
+// === 타임테이블 색깔 & 순공 시간 표시 ===================
 document.addEventListener("DOMContentLoaded", () => {
   const timetable = document.getElementById("timetable");
   if (!timetable) return;
   const colors = ["#ff4b4b", "#ffa54b", "#fff54b", "#4bff4b", "#4b94ff", "#9b4bff", "#9e9e9e"];
 
-  // --- [추가] 시간 표시 영역/텍스트 준비(한 번만 생성해서 재사용) ---
-const time = document.getElementById("time");
-if (!time) throw new Error("#time 요소가 필요합니다.");
+  const time = document.getElementById("time");
+  if (!time) throw new Error("#time 요소가 필요합니다.");
 
-Object.assign(time.style, {
-  position: "relative",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  userSelect: "none",
-});
-
-let timetext = document.getElementById("timetext");
-if (!timetext) {
-  timetext = document.createElement("h1");
-  timetext.id = "timetext";
-  Object.assign(timetext.style, {
-    margin: "0",
-    fontSize: "20px",
-    lineHeight: "1",
-    pointerEvents: "none",
+  Object.assign(time.style, {
     position: "relative",
-    zIndex: "1",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    userSelect: "none",
   });
-  time.appendChild(timetext);
-}
 
-// --- [추가] 현재 색칠된 칸 수 기준으로 총 시간(h, m) 갱신 ---
-function updateTime() {
-  const paintedCount = [...timetable.querySelectorAll("#timetable > div")]
-    .filter((d) => d.dataset.cidx !== undefined) // 색이 적용된 칸만 집계
-    .length;
+  let timetext = document.getElementById("timetext");
+  if (!timetext) {
+    timetext = document.createElement("h1");
+    timetext.id = "timetext";
+    Object.assign(timetext.style, {
+      margin: "0",
+      fontSize: "20px",
+      lineHeight: "1",
+      pointerEvents: "none",
+      position: "relative",
+      zIndex: "1",
+    });
+    time.appendChild(timetext);
+  }
 
-  const totalMinutes = paintedCount * 10; // 칸 1개 = 10분
-  const h = Math.floor(totalMinutes / 60);
-  const m = totalMinutes % 60;
+  function updateTime() {
+    const paintedCount = [...timetable.querySelectorAll("#timetable > div")]
+      .filter((d) => d.dataset.cidx !== undefined) // 색이 적용된 칸만 집계
+      .length;
 
-  timetext.textContent = `${h}시간 ${m}분`;
-}
+    const totalMinutes = paintedCount * 10; // 칸 1개 = 10분
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+
+    timetext.textContent = `${h}시간 ${m}분`;
+  }
 
   // 이벤트 위임: timetable 내부 칸 클릭 처리
   timetable.addEventListener("click", (e) => {
@@ -350,140 +358,19 @@ function updateTime() {
   });
   updateTime();
 });//타임테이블 색깔&순공 시간 표시
-// === 회원가입 / 로그인 / 로그아웃 (서버 버전) ===================
-document.addEventListener("DOMContentLoaded", () => {
-  const $ = (sel) => document.querySelector(sel);
-
-  const signupForm = $("#signup-form");
-  const loginForm  = $("#login-form");
-  const logoutBtn  = $("#logout-btn");
-  const authForms  = $("#auth-forms");
-  const authStatus = $("#auth-status");
-  const authMsg    = $("#auth-message");
-  const currentUserSpan = $("#current-user");
-
-  // 브라우저에 현재 유저 이름만 저장(화면용)
-  const LS_CURRENT = "authCurrentUser";
-
-  const getCurrentUser = () => localStorage.getItem(LS_CURRENT) || null;
-  const setCurrentUser = (username) => {
-    if (username) localStorage.setItem(LS_CURRENT, username);
-    else localStorage.removeItem(LS_CURRENT);
-  };
-
-  function renderAuthUI() {
-    const user = getCurrentUser();
-    if (user) {
-      authForms.style.display = "none";
-      authStatus.style.display = "flex";
-      currentUserSpan.textContent = `현재계정: '${user}'`;
-      authMsg.textContent = "로그인 성공";
-      authMsg.style.color = "#2a7";
-    } else {
-      authForms.style.display = "grid";
-      authStatus.style.display = "none";
-      currentUserSpan.textContent = "";
-      authMsg.textContent = "";
-    }
-  }
-
-  // 회원가입
-  signupForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const username = $("#signup-username").value.trim();
-    const password = $("#signup-password").value;
-
-    if (!username || !password) {
-      authMsg.textContent = "아이디와 비밀번호를 모두 입력하세요.";
-      authMsg.style.color = "#d33";
-      return;
-    }
-    if (username.includes(" ")) {
-      authMsg.textContent = "아이디에 공백은 사용할 수 없습니다.";
-      authMsg.style.color = "#d33";
-      return;
-    }
-    if (password.length < 4) {
-      authMsg.textContent = "비밀번호는 최소 4자 이상이어야 합니다.";
-      authMsg.style.color = "#d33";
-      return;
-    }
-
-    try {
-      await apiPost("/api/signup", { username, password });
-      authMsg.textContent = "회원가입 완료! 이제 로그인하세요.";
-      authMsg.style.color = "#2a7";
-      $("#signup-username").value = "";
-      $("#signup-password").value = "";
-    } catch (err) {
-      authMsg.textContent = err.message;
-      authMsg.style.color = "#d33";
-    }
-  });
-
-  // 로그인
-  loginForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const username = $("#login-username").value.trim();
-    const password = $("#login-password").value;
-
-    try {
-      const data = await apiPost("/api/login", { username, password });
-      // 서버가 로그인 성공하면 세션을 쿠키에 저장, username은 UI용으로 localStorage에 저장
-      setCurrentUser(data.username || username);
-
-      $("#login-username").value = "";
-      $("#login-password").value = "";
-
-      renderAuthUI();
-      // 로그인 후 현재 날짜 데이터 로드
-      window.__plannerLoad && window.__plannerLoad();
-    } catch (err) {
-      authMsg.textContent = err.message;
-      authMsg.style.color = "#d33";
-    }
-  });
-
-  // 로그아웃
-  logoutBtn?.addEventListener("click", async () => {
-    try {
-      await apiPost("/api/logout", {});
-    } catch (e) {
-      // 실패해도 일단 클라이언트 상태는 초기화
-    }
-    setCurrentUser(null);
-    renderAuthUI();
-  });
-
-  // 페이지 처음 열 때, 서버에 세션이 살아있는지 체크
-  (async () => {
-    try {
-      const me = await apiGet("/api/me"); // { username } 또는 null
-      if (me && me.username) {
-        setCurrentUser(me.username);
-      } else {
-        setCurrentUser(null);
-      }
-    } catch {
-      setCurrentUser(null);
-    }
-    renderAuthUI();
-  })();
-});
 
 function toggleImage(img) {
   const src = img.getAttribute("src");          // 상대경로 그대로 비교
   const isChecked = src.endsWith("체크표시_원.png");
   img.setAttribute("src", isChecked ? "images/원.png" : "images/체크표시_원.png");
 }//체크표시이미지
- // === [NEW] Per-user × Per-date autosave/load ==============================
-// === Per-user × Per-date autosave/load (서버 버전) ==============
+
+// === 사용자 × 날짜별 자동저장/불러오기 (서버 버전) ==============
 (() => {
   const STORAGE_DATE_KEY = "selectedDate"; // 날짜는 그대로 localStorage 사용 (UI용)
   const COLORS = ["#ff4b4b", "#ffa54b", "#fff54b", "#4bff4b", "#4b94ff", "#9b4bff", "#9e9e9e"];
 
   const $ = (sel) => document.querySelector(sel);
-  const getCurrentUser = () => localStorage.getItem("authCurrentUser") || null;
   const getDateKey = () => {
     const iso = localStorage.getItem(STORAGE_DATE_KEY);
     return iso ? iso.slice(0, 10) : null; // YYYY-MM-DD
@@ -524,9 +411,8 @@ function toggleImage(img) {
 
   // 저장: 서버로 보내기
   async function save() {
-    const user = getCurrentUser();
     const dkey = getDateKey();
-    if (!user || !dkey) return;
+    if (!CURRENT_USER || !dkey) return;
 
     const data = collect();
     try {
@@ -541,9 +427,8 @@ function toggleImage(img) {
 
   // 로드: 서버에서 가져와서 화면에 반영
   async function loadAll() {
-    const user = getCurrentUser();
     const dkey = getDateKey();
-    if (!user || !dkey) return;
+    if (!CURRENT_USER || !dkey) return;
 
     let data = null;
     try {
@@ -602,22 +487,21 @@ function toggleImage(img) {
   window.__plannerLoad = loadAll;
 
   // 날짜가 바뀌면 자동 로드
-const dateBox = document.getElementById("date");
-if (dateBox) {
-  const mo = new MutationObserver(() => {
-    // 날짜 텍스트 바뀌면 -> 자동 로드
-    window.__plannerLoad && window.__plannerLoad();
-  });
-  mo.observe(dateBox, { childList: true, subtree: true, characterData: true });
+  const dateBox = document.getElementById("date");
+  if (dateBox) {
+    const mo = new MutationObserver(() => {
+      // 날짜 텍스트 바뀌면 -> 자동 로드
+      window.__plannerLoad && window.__plannerLoad();
+    });
+    mo.observe(dateBox, { childList: true, subtree: true, characterData: true });
 
-  // 캘린더 내부 클릭 후 비동기로 한 번 더 체크
-  document.addEventListener("click", (ev) => {
-    if (ev.target.closest("#date")) {
-      setTimeout(() => {
-        window.__plannerLoad && window.__plannerLoad();
-      }, 0);
-    }
-  });
-}
-
+    // 캘린더 내부 클릭 후 비동기로 한 번 더 체크
+    document.addEventListener("click", (ev) => {
+      if (ev.target.closest("#date")) {
+        setTimeout(() => {
+          window.__plannerLoad && window.__plannerLoad();
+        }, 0);
+      }
+    });
+  }
 })();
